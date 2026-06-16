@@ -1,1254 +1,1227 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="An ECHONET Lite emulator that can control virtual home appliances."
-    />
-    <title>echonet-lite-kaden-emulator</title>
+    <meta name="theme-color" content="#0f1923" />
+    <meta name="description" content="ECHONET Lite Device Emulator - Professional Control Panel" />
+    <title>ECHONET Lite Controller</title>
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <style>
-      .floor-light-color-lamp {
-        stroke: #fbcb00;
-      }
-      .floor-light-color-white {
-        stroke: #E0E0E0;
-      }
-      .floor-light-color-neutralWhite {
-        stroke: #E0E080;
-      }
-      .airconditioner-wind-color-off {
-        stroke: transparent;
-      }
-      .airconditioner-wind-color-cool {
-        stroke: #0000FF;
-      }
-      .airconditioner-wind-color-heat {
-        stroke: #FF0000;
-      }
-      .airconditioner-wind-color-dry {
-        stroke: #04b8be;
-      }
-      .airconditioner-wind-color-wind {
-        stroke: #00a033;
-      }
+        :root {
+            --bg-primary: #0f1923;
+            --bg-secondary: #1a2734;
+            --bg-card: #1e2d3d;
+            --bg-card-hover: #243447;
+            --border-color: #2a3f55;
+            --text-primary: #e8edf2;
+            --text-secondary: #8b9bb4;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-orange: #f59e0b;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+        }
 
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Layout */
+        .main-container {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .device-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+        }
+
+        /* Device Cards */
+        .device-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .device-card:hover {
+            border-color: var(--accent-blue);
+            background-color: var(--bg-card-hover);
+        }
+
+        .device-card.disabled {
+            opacity: 0.5;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        .card-header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .device-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .device-icon.hvac { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .device-icon.lighting { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
+        .device-icon.sensor { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .device-icon.security { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+        .device-icon.shutter { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+        .device-icon.bath { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+
+        .device-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .device-eoj {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .card-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .card-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border-color);
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .card-toggle input:checked + .toggle-slider {
+            background-color: var(--accent-blue);
+        }
+
+        .card-toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        /* Status Display */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .status-item {
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .status-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .status-value {
+            font-size: 20px;
+            font-weight: 600;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+
+        .status-value.unit {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        /* Controls */
+        .control-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Mode Buttons */
+        .mode-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .mode-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            background-color: transparent;
+            color: var(--text-secondary);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-primary);
+        }
+
+        .mode-btn.active {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        /* Slider Controls */
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 6px;
+            background-color: var(--border-color);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background-color: var(--accent-blue);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            min-width: 60px;
+            text-align: right;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-weight: 600;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(0,0,0,0.2);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-btn:hover {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .action-btn.danger:hover {
+            background-color: var(--accent-red);
+            border-color: var(--accent-red);
+        }
+
+        /* Toggle Switch */
+        .toggle-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(0,0,0,0.2);
+            color: var(--text-primary);
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background-color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-top: 12px;
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* Dropdown */
+        .dropdown-menu {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .dropdown-item {
+            color: var(--text-primary);
+            padding: 8px 16px;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--bg-card);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .device-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main-container {
+                padding: 12px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
     </style>
-  </head>
-  <body>
-    <div>
-      <svg width="1200px" height="800px">
-        <image
-          x="400"
-          y="170"
-          width="280"
-          height="280"
-          xlink:href="./outside.png"
-        ></image>
-        <!-- シャッター -->
-        <g id="shutter-opened" style="display:block">
-        </g>
-        <g id="shutter-opening" style="display:none">
-          <image
-            x="400"
-            y="170"
-            width="280"
-            height="280"
-            xlink:href="./blinds.png"
-          ></image>
-          <image
-            x="500"
-            y="250"
-            width="134"
-            height="132"
-            xlink:href="./upArrow.png"
-          ></image>
-        </g>
-        <g id="shutter-halfOpen" style="display:none">
-          <image
-            x="400"
-            y="170"
-            width="280"
-            height="280"
-            xlink:href="./blinds.png"
-          ></image>
-        </g>
-        <g id="shutter-closing" style="display:none">
-          <image
-            x="400"
-            y="170"
-            width="280"
-            height="280"
-            xlink:href="./blinds.png"
-          ></image>
-          <image
-            x="500"
-            y="250"
-            width="134"
-            height="132"
-            xlink:href="./downArrow.png"
-          ></image>
-        </g>
-        <g id="shutter-closed" style="display:none">
-          <image
-            x="400"
-            y="170"
-            width="280"
-            height="280"
-            xlink:href="./shutter_close.png"
-          ></image>
-        </g>
-        <!-- 背景 -->
-        <image
-          x="350"
-          y="150"
-          width="400"
-          height="330"
-          xlink:href="./window.png"
-        ></image>
-        <image
-          x="100"
-          y="100"
-          width="800"
-          height="681"
-          xlink:href="./bgimage.png"
-        ></image>
-        <!-- 人 -->
-        <g id="human-sensor" style="display:block">
-          <image
-            x="100"
-            y="100"
-            width="800"
-            height="681"
-            xlink:href="./human.png"
-          ></image>
-        </g>
-        <image
-          x="100"
-          y="100"
-          width="800"
-          height="681"
-          xlink:href="./desk.png"
-        ></image>
-        <image
-          x="30"
-          y="100"
-          width="260"
-          height="128"
-          xlink:href="./airconditioner.png"
-        ></image>
-        <image
-          x="-50"
-          y="400"
-          width="291"
-          height="400"
-          xlink:href="./standlight.png"
-        ></image>
-        <image
-          x="300"
-          y="0"
-          width="426"
-          height="95"
-          xlink:href="./cellinglight.png"
-        ></image>
-        <!-- 温湿度計 -->
-        <g>
-          <image
-            x="800"
-            y="120"
-            width="104"
-            height="104"
-            xlink:href="./sensor.png"
-          ></image>
-          <line
-            id="room-temp-line"
-            x1="882"
-            y1="169"
-            x2="847"
-            y2="169"
-            stroke="#ff0000",
-            stroke-width="3",
-            stroke-linecap="round"
-          />
-          <line
-            id="room-hum-line"
-            x1="852"
-            y1="185"
-            x2="852"
-            y2="202"
-            stroke="#0000ff",
-            stroke-width="3",
-            stroke-linecap="round"
-          />
-        </g>
-        <!-- 玄関 -->
-        <g id="entrance-door-locked" style="display: block;">
-          <image
-            x="870"
-            y="200"
-            width="244"
-            height="375"
-            xlink:href="./door.png"
-          ></image>
-          <image
-            x="950"
-            y="250"
-            width="112"
-            height="125"
-            xlink:href="./lock.png"
-          ></image>
-        </g>
-        <g id="entrance-door-opened" style="display: none;">
-          <image
-            x="870"
-            y="200"
-            width="244"
-            height="375"
-            xlink:href="./door_open.png"
-            ></image>
-        </g>
-        <g id="entrance-door-unlocked" style="display: none;">
-          <image
-            x="870"
-            y="200"
-            width="244"
-            height="375"
-            xlink:href="./door.png"
-          ></image>
-          <image
-            x="950"
-            y="250"
-            width="112"
-            height="125"
-            xlink:href="./unlock.png"
-          ></image>
-        </g>
-        <!-- 風呂 -->
-        <g id="bath-empty" style="display: block;">
-          <image
-            x="900"
-            y="500"
-            width="400"
-            height="466"
-            xlink:href="./bath_empty.png"
-          ></image>
-        </g>
-        <g id="bath-drainage" style="display: none;">
-          <image
-            x="900"
-            y="500"
-            width="400"
-            height="466"
-            xlink:href="./bath_empty.png"
-          ></image>
-          <image
-            x="1000"
-            y="600"
-            width="134"
-            height="132"
-            xlink:href="./downArrow.png"
-          ></image>
-        </g>
-        <g id="bath-supply" style="display: none;">
-          <image
-            x="900"
-            y="500"
-            width="400"
-            height="466"
-            xlink:href="./bath_empty.png"
-          ></image>
-          <image
-            x="1000"
-            y="600"
-            width="134"
-            height="132"
-            xlink:href="./upArrow.png"
-          ></image>
-        </g>
-        <g id="bath-full" style="display: none;">
-          <image
-            x="900"
-            y="500"
-            width="400"
-            height="466"
-            xlink:href="./bath_full.png"
-          ></image>
-        </g>
-        <!-- シーリングライト -->
-        <g id="celling-light-on" style="display: block;">
-          <image
-            x="1100"
-            y="250"
-            width="105"
-            height="147"
-            xlink:href="./switch.png"
-          ></image>
-          <line
-            x1="419"
-            y1="118"
-            x2="406"
-            y2="143"
-            stroke="#fbcb00"
-            stroke-width="12"
-            stroke-linecap="round"
-          />
-          <line
-            x1="469"
-            y1="118"
-            x2="463"
-            y2="141"
-            stroke="#fbcb00"
-            stroke-width="12"
-            stroke-linecap="round"
-          />
-          <line
-            x1="521"
-            y1="118"
-            x2="527"
-            y2="141"
-            stroke="#fbcb00"
-            stroke-width="12"
-            stroke-linecap="round"
-          />
-          <line
-            x1="571"
-            y1="118"
-            x2="580"
-            y2="141"
-            stroke="#fbcb00"
-            stroke-width="12"
-            stroke-linecap="round"
-          />
-        </g>
-        <g id="celling-light-off" style="display: none;">
-          <image
-            x="1100"
-            y="250"
-            width="105"
-            height="147"
-            xlink:href="./switch_off.png"
-          ></image>
-        </g>
-        <!-- フロアライト -->
-        <g id="floor-light-on" style="display:block">
-          <line
-            id="floor-light-line1"
-            class="floor-light-color-lamp"
-            x1="50"
-            y1="538"
-            x2="40"
-            y2="573"
-            stroke-width="12"
-            stroke-linecap="round"
-          />
-          <line
-            id="floor-light-line2"
-            class="floor-light-color-lamp"
-            x1="89"
-            y1="538"
-            x2="89"
-            y2="571"
-            stroke-width="12"
-            stroke-linecap="round"
-          />
-          <line
-            id="floor-light-line3"
-            class="floor-light-color-lamp"
-            x1="128"
-            y1="538"
-            x2="137"
-            y2="571"
-            stroke-width="12"
-            stroke-linecap="round"
-          />
-        </g>
-        <!-- エアコンの風 -->
-        <g>
-          <line
-            id="airconditioner-wind1"
-            class="airconditioner-wind-color-cool"
-            x1="120"
-            y1="230"
-            x2="130"
-            y2="270"
-            stroke="#0000FF"
-            stroke-width="12"
-            stroke-linecap="round"
-          />,
-          <line
-            id="airconditioner-wind2"
-            class="airconditioner-wind-color-cool"
-            x1="160"
-            y1="230"
-            x2="170"
-            y2="270"
-            stroke="#0000FF"
-            stroke-width="12"
-            stroke-linecap="round"
-          />,
-          <line
-            id="airconditioner-wind3"
-            class="airconditioner-wind-color-cool"
-            x1="200"
-            y1="230"
-            x2="210"
-            y2="270"
-            stroke="#0000FF"
-            stroke-width="12"
-            stroke-linecap="round"
-          />,
-          <line
-            id="airconditioner-wind4"
-            class="airconditioner-wind-color-cool"
-            x1="240"
-            y1="230"
-            x2="250"
-            y2="270"
-            stroke="#0000FF"
-            stroke-width="12"
-            stroke-linecap="round"
-          />,
-        </g>
-        <rect
-          x="990"
-          y="690"
-          width="210"
-          height="80"
-          fill="#FFFFFF",
-          stroke="#000000",
-          stroke-width="1"
-        />
-      </svg>
-      <!-- シャッター -->
-      <button 
-        id="shutter-up-button"
-        type="button" 
-        onclick="openShutter()"
-        class="btn btn-outline-secondary" 
-        style="position: absolute; left: 730px; top: 300px">
-        ↑</button>
-      <button 
-        id="shutter-stop-button"
-        type="button" 
-        onclick="stopShutter()"
-        class="btn btn-outline-secondary" 
-        style="position: absolute; left: 730px; top: 340px">
-        ■</button>
-      <button 
-        id="shutter-down-button"
-        type="button" 
-        onclick="closeShutter()"
-        class="btn btn-outline-secondary" 
-        style="position: absolute; left: 730px; top: 380px">
-        ↓</button>
-
-      <!-- 風呂自動 -->
-      <button 
-        id="bath-auto-button"
-        onclick="ToggleBathAuto()"
-        type="button" 
-        class="btn btn-outline-secondary fw-bold" 
-        style="position: absolute; left: 1000px; top: 700px; width: 70px; height: 65px">
-        BATH
-        <br />
-        AUTO</button>
-      <!-- 風呂温度 -->
-      <p
-        id="label-bath-temp"
-        style="position: absolute; left:1080px; top:720px"
-      >
-        <span id="bath-temp">40</span><span>℃</span>
-      </p>
-      <!-- 風呂温度熱く -->
-      <button 
-        type="button" 
-        onclick="incrementBathTemp()"
-        class="btn btn-outline-secondary fw-bold" 
-        style="position: absolute; left: 1120px; top: 700px; width: 60px; height: 28px; padding: 0px;">
-        ↑</button>
-      <!-- 風呂温度ぬるく -->
-      <button 
-        type="button" 
-        onclick="decementBathTemp()"
-        class="btn btn-outline-secondary fw-bold" 
-        style="position: absolute; left: 1120px; top: 732px; width: 60px; height: 28px; padding: 0px;">
-        ↓</button>
-      
-      <!-- シーリングライトスイッチ -->
-      <button 
-        type="button" 
-        class="btn btn-outline-secondary" 
-        onclick="toggleCellingLight()"
-        style="position: absolute; left: 1100px; top: 255px; width: 100px; height: 135px;opacity: 0.2;border: none;">
-        </button>
-
-      <!-- ドア -->
-      <button 
-        type="button" 
-        class="btn btn-outline-secondary" 
-        onclick="toggleEntranceDoor()"
-        style="position: absolute; left: 900px; top: 225px; width: 190px; height: 305px;opacity: 0.2;border: none;">
-        </button>
-      
-      <!-- ドアロック -->
-      <button 
-        type="button" 
-        class="btn btn-outline-secondary" 
-        onclick="toggleEntranceLock()"
-        style="position: absolute; left: 950px; top: 250px; width: 112px; height: 125px;opacity: 0.2;border: none;">
-        </button>
-
-      <!-- フロアライト -->
-      <button 
-        type="button" 
-        class="btn btn-outline-secondary" 
-        onclick="toggleFloorLight()"
-        style="position: absolute; left: 35px; top: 410px; width: 120px; height: 100px;opacity: 0.2;border: none;">
-        </button>
-      
-      <!-- 人センサー -->
-      <button 
-        id="human-sensor-button"
-        type="button" 
-        onclick="toggleHumanSensor()"
-        class="btn btn-outline-secondary" 
-        style="position: absolute; left: 340px; top: 280px; width: 150px; height: 270px; opacity: 0.2;border: none;">
-        </button>
-
-      <!-- 室温 -->
-      <p
-        id="label-temp"
-        style="position: absolute; left: 910px; top: 145px"
-      ><span id="room-temp">20.0</span><span>℃</span></p>
-      <input 
-        id="room-temp-range"
-        type="range" 
-        class="form-range" 
-        min="-10" max="40" step="0.1"
-        oninput="changeRoomTemp()"
-        style="position: absolute; left: 960px; top: 150px; width: 100px; " />
-      
-      <!-- 湿度 -->
-      <p
-        id="label-temp"
-        style="position: absolute; left: 910px; top: 175px"
-      ><span id="room-hum">50.0</span><span>%</span></p>
-      <input 
-        id="room-hum-range"
-        type="range"
-        class="form-range"
-        min="0" max="100" step="1"
-        oninput="changeRoomHum()"
-        style="position: absolute; left: 960px; top: 180px; width: 100px; " />
-      
-      <!-- エアコン -->
-      <input 
-        id="airconditioner-temp-range"
-        type="range" 
-        class="form-range" 
-        min="15" max="30" step="1" value="20"
-        oninput="changeAirConditionerTemp()"
-        style="position: absolute; left: 70px; top: 110px; width: 150px; " />
-      <p
-        id="label-ha-temp"
-        style="position: absolute; left: 230px; top: 110px"
-      ><span id="airconditioner-temp">20</span><span>℃</span></p>
-      <button 
-        id="airconditioner-mode-button-off"
-        type="button" 
-        class="btn btn-secondary fw-bold" 
-        onclick="setAirConditionerMode('off')"
-        style="position: absolute; left: 70px; top: 140px; width: 60px; height: 24px; padding: 0px;">OFF</button>
-      <button 
-        id="airconditioner-mode-button-cool"
-        type="button" 
-        class="btn btn-outline-primary fw-bold" 
-        onclick="setAirConditionerMode('cool')"
-        style="position: absolute; left: 140px; top: 140px; width: 60px; height: 24px; padding: 0px;">COOL</button>
-      <button 
-        id="airconditioner-mode-button-heat"
-        type="button" 
-        class="btn btn-outline-danger fw-bold" 
-        onclick="setAirConditionerMode('heat')"
-        style="position: absolute; left: 210px; top: 140px; width: 60px; height: 24px; padding: 0px;">HEAT</button>
-      <button 
-        id="airconditioner-mode-button-dry"
-        type="button" 
-        class="btn btn-outline-info fw-bold" 
-        onclick="setAirConditionerMode('dry')"
-        style="position: absolute; left: 70px; top: 170px; width: 60px; height: 24px; padding: 0px;">DRY</button>
-      <button 
-        id="airconditioner-mode-button-wind"
-        type="button" 
-        class="btn btn-outline-success fw-bold" 
-        onclick="setAirConditionerMode('wind')"
-        style="position: absolute; left: 140px; top: 170px; width: 60px; height: 24px; padding: 0px;">WIND</button>
-
-      <div class="dropdown position-fixed top-0 start-0 p-2">
-        <button class="btn btn-outline-secondary" data-bs-toggle="dropdown" id="dropdownMenu" aria-expanded="false" style="padding-left: 8px;padding-right: 8px;padding-top: 3px;padding-bottom: 4px;">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-list" viewBox="0 0 16 16" >
-            <path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
-          </svg>
-        </button>
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenu">
-          <li>
-            <a class="dropdown-item" href="#" onclick="sendInstanceListNotification()">
-              Send Instance List Notification(0xD5)
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="edit.html">
-              Edit Instance List
-            </a>
-          </li>
-        </ul>
-      </div>
-
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-title">
+            <div class="logo">EL</div>
+            ECHONET Lite Controller
+        </div>
+        <div class="header-status">
+            <div class="status-indicator">
+                <div class="status-dot" id="connectionDot"></div>
+                <span id="connectionStatus">Connected</span>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="sendInstanceListNotification()">Send Instance List Notification (0xD5)</a></li>
+                    <li><a class="dropdown-item" href="edit.html">Edit Instance List</a></li>
+                </ul>
+            </div>
+        </div>
     </div>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="device-grid" id="deviceGrid">
+            
+            <!-- Air Conditioner Card -->
+            <div class="device-card" id="card-airConditioner">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon hvac">&#9776;</div>
+                        <div>
+                            <div class="device-name">Air Conditioner</div>
+                            <div class="device-eoj">EOJ: 013001 - Home Air Conditioner</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('airConditioner', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Operating Mode</div>
+                            <div class="status-value" id="ac-mode-display">--</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Set Temperature</div>
+                            <div class="status-value"><span id="ac-temp-display">--</span><span class="unit">°C</span></div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="control-label">Mode Selection</div>
+                        <div class="mode-buttons" id="ac-modes">
+                            <button class="mode-btn" data-mode="off" onclick="setACMode('off')">OFF</button>
+                            <button class="mode-btn" data-mode="cool" onclick="setACMode('cool')">COOL</button>
+                            <button class="mode-btn" data-mode="heat" onclick="setACMode('heat')">HEAT</button>
+                            <button class="mode-btn" data-mode="dry" onclick="setACMode('dry')">DRY</button>
+                            <button class="mode-btn" data-mode="wind" onclick="setACMode('wind')">WIND</button>
+                        </div>
+                        <div class="control-label" style="margin-top: 16px;">Temperature Control</div>
+                        <div class="slider-container">
+                            <input type="range" min="15" max="30" step="1" value="20" id="ac-temp-slider" oninput="updateACTempDisplay()">
+                            <span class="slider-value" id="ac-temp-slider-val">20°C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ceiling Light Card -->
+            <div class="device-card" id="card-ceilingLight">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon lighting">&#9729;</div>
+                        <div>
+                            <div class="device-name">Ceiling Light</div>
+                            <div class="device-eoj">EOJ: 029101 - Mono Functional Lighting</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('ceilingLight', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Power State</div>
+                            <div class="status-value" id="cl-state-display">--</div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="toggleCeilingLight()">Toggle Light</button>
+                            <button class="action-btn" id="cl-on-btn" onclick="setCeilingLight(true)">ON</button>
+                            <button class="action-btn danger" id="cl-off-btn" onclick="setCeilingLight(false)">OFF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Floor Light Card -->
+            <div class="device-card" id="card-floorLight">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon lighting">&#9729;</div>
+                        <div>
+                            <div class="device-name">Floor Light</div>
+                            <div class="device-eoj">EOJ: 029001 - General Lighting</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('floorLight', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Power State</div>
+                            <div class="status-value" id="fl-state-display">--</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Color Temperature</div>
+                            <div class="status-value" id="fl-color-display">--</div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="control-label">Light Color</div>
+                        <div class="mode-buttons" id="fl-colors">
+                            <button class="mode-btn" data-color="white" onclick="setFloorColor('white')">White</button>
+                            <button class="mode-btn" data-color="neutralWhite" onclick="setFloorColor('neutralWhite')">Neutral White</button>
+                            <button class="mode-btn" data-color="lamp" onclick="setFloorColor('lamp')">Lamp (Warm)</button>
+                        </div>
+                        <div class="action-buttons" style="margin-top: 12px;">
+                            <button class="action-btn" onclick="cycleFloorLight()">Cycle Color</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temperature Sensor Card -->
+            <div class="device-card" id="card-tempSensor">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon sensor">&#9760;</div>
+                        <div>
+                            <div class="device-name">Temperature Sensor</div>
+                            <div class="device-eoj">EOJ: 001101 - Temperature Sensor</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('tempSensor', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Room Temperature</div>
+                            <div class="status-value"><span id="temp-display">--</span><span class="unit">°C</span></div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="slider-container">
+                            <input type="range" min="-10" max="40" step="0.1" value="20" id="temp-slider" oninput="updateTempDisplay()">
+                            <span class="slider-value" id="temp-slider-val">20.0°C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Humidity Sensor Card -->
+            <div class="device-card" id="card-humSensor">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon sensor">&#9747;</div>
+                        <div>
+                            <div class="device-name">Humidity Sensor</div>
+                            <div class="device-eoj">EOJ: 001201 - Humidity Sensor</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('humSensor', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Room Humidity</div>
+                            <div class="status-value"><span id="hum-display">--</span><span class="unit">%</span></div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="slider-container">
+                            <input type="range" min="0" max="100" step="1" value="50" id="hum-slider" oninput="updateHumDisplay()">
+                            <span class="slider-value" id="hum-slider-val">50%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Motion Sensor Card -->
+            <div class="device-card" id="card-motionSensor">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon sensor">&#9876;</div>
+                        <div>
+                            <div class="device-name">Motion Sensor</div>
+                            <div class="device-eoj">EOJ: 000701 - Human Detection Sensor</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('motionSensor', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Detection Status</div>
+                            <div class="status-value" id="motion-display">--</div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="setMotion(true)">Detect</button>
+                            <button class="action-btn danger" onclick="setMotion(false)">Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shutter Card -->
+            <div class="device-card" id="card-shutter">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon shutter">&#9638;</div>
+                        <div>
+                            <div class="device-name">Shutter</div>
+                            <div class="device-eoj">EOJ: 026301 - Rain Sliding Door Shutter</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('shutter', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">State</div>
+                            <div class="status-value" id="shutter-state-display">--</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Position</div>
+                            <div class="status-value"><span id="shutter-pos-display">--</span><span class="unit">%</span></div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="shutter-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="setShutter('opening')">Open</button>
+                            <button class="action-btn" onclick="setShutter('stopped')">Stop</button>
+                            <button class="action-btn danger" onclick="setShutter('closing')">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Door Card -->
+            <div class="device-card" id="card-door">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon security">&#9737;</div>
+                        <div>
+                            <div class="device-name">Entrance Door</div>
+                            <div class="device-eoj">EOJ: 026F01 - Electric Lock</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('door', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Door State</div>
+                            <div class="status-value" id="door-state-display">--</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Lock Status</div>
+                            <div class="status-value" id="door-lock-display">--</div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="control-label">Door Control</div>
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="setDoor('opened')">Open</button>
+                            <button class="action-btn danger" onclick="setDoor('closed')">Close</button>
+                        </div>
+                        <div class="control-label" style="margin-top: 12px;">Lock Control</div>
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="setDoorLock('locked')">Lock</button>
+                            <button class="action-btn danger" onclick="setDoorLock('unlocked')">Unlock</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bath Water Heater Card -->
+            <div class="device-card" id="card-bath">
+                <div class="card-header">
+                    <div class="card-header-left">
+                        <div class="device-icon bath">&#9762;</div>
+                        <div>
+                            <div class="device-name">Bath Water Heater</div>
+                            <div class="device-eoj">EOJ: 026B01 - Electric Water Heater</div>
+                        </div>
+                    </div>
+                    <label class="card-toggle">
+                        <input type="checkbox" checked onchange="toggleDevice('bath', this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="card-body">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <div class="status-label">Bath State</div>
+                            <div class="status-value" id="bath-state-display">--</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Water Temperature</div>
+                            <div class="status-value"><span id="bath-temp-display">--</span><span class="unit">°C</span></div>
+                        </div>
+                    </div>
+                    <div class="progress-container">
+                        <div class="control-label" style="margin-bottom: 8px;">Water Level</div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="bath-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="control-section">
+                        <div class="control-label">Auto Mode</div>
+                        <div class="mode-buttons">
+                            <button class="mode-btn" id="bath-auto-on" onclick="setBathAuto(true)">AUTO ON</button>
+                            <button class="mode-btn" id="bath-auto-off" onclick="setBathAuto(false)">AUTO OFF</button>
+                        </div>
+                        <div class="control-label" style="margin-top: 12px;">Temperature Setting</div>
+                        <div class="slider-container">
+                            <input type="range" min="30" max="60" step="1" value="40" id="bath-temp-slider" oninput="updateBathTempDisplay()">
+                            <span class="slider-value" id="bath-temp-slider-val">40°C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
     <script src="js/bootstrap.bundle.min.js"></script>
-
     <script type="text/javascript">
-      async function sendInstanceListNotification()
-      {
-        const res = await fetch("/api/commands/instanceListNotification", {method: "POST"});
-      }
-
-      async function toggleEntranceDoor(){
-        const body = { state:"opened", lockState:"unlocked" };
-        if(currentStatus.door.state === "opened")
-        {
-          body.state = "closed";
-          body.lockState = "unlocked";
-        }
-        else if(currentStatus.door.state === "closed")
-        {
-          body.state = "opened";
-          body.lockState = "unlocked";
-        }
-        const res = await fetch("/api/door", {
-          method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
-        }
-      }
-      async function toggleEntranceLock(){
-        const body = { state:"opened", lockState:"unlocked" };
-        if(currentStatus.door.lockState === "locked")
-        {
-          body.state = "closed";
-          body.lockState = "unlocked";
-        }
-        else if(currentStatus.door.lockState === "unlocked")
-        {
-          body.state = "closed";
-          body.lockState = "locked";
-        }
-        const res = await fetch("/api/door", {
-          method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
-        }
-      }
-
-      function updateEntranceDoor()
-      {
-        var locked = document.getElementById("entrance-door-locked");
-        var opened = document.getElementById("entrance-door-opened");
-        var unlocked = document.getElementById("entrance-door-unlocked");
-        if (currentStatus.door.lockState == "locked") {
-          locked.style.display = "block";
-          opened.style.display = "none";
-          unlocked.style.display = "none";
-        } else if(currentStatus.door.state == "opened") {
-          locked.style.display = "none";
-          opened.style.display = "block";
-          unlocked.style.display = "none";
-        }
-        else
-        {
-          locked.style.display = "none";
-          opened.style.display = "none";
-          unlocked.style.display = "block";
+        // ============================================================
+        // State Management
+        // ============================================================
         
-        }
-      }
-      async function toggleCellingLight(){
-        var cellingLightOn = document.getElementById("celling-light-on");
-        var cellingLightOff = document.getElementById("celling-light-off");
-        var body = {state:"on"};
-        if (currentStatus.light.state == "on") {
-          body.state = "off";
-        } else {
-          body.state = "on";
-        }
-        const res = await fetch("/api/cellingLight", {
-          method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
-        }
-      }
-
-      function updateCellingLight()
-      {
-        var cellingLightOn = document.getElementById("celling-light-on");
-        var cellingLightOff = document.getElementById("celling-light-off");
-        if (currentStatus.light.state == "on") {
-          cellingLightOn.style.display = "block";
-          cellingLightOff.style.display = "none";
-        } else {
-          cellingLightOn.style.display = "none";
-          cellingLightOff.style.display = "block";
-        }
-      }
-
-      async function toggleFloorLight(){
-        const body = {state:"on", color:"white"};
-        if(currentStatus.floorLight.state == "off")
-        {
-          body.state = "on";
-          body.color = "white";
-        }
-        else if(currentStatus.floorLight.color === "white")
-        {
-          body.state = "on";
-          body.color = "neutralWhite";
-        }
-        else if(currentStatus.floorLight.color === "neutralWhite")
-        {
-          body.state = "on";
-          body.color = "lamp";
-        }
-        else if(currentStatus.floorLight.color === "lamp")
-        {
-          body.state = "off";
-          body.color = "white";
-        }
-
-        const res = await fetch("/api/floorLight", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-          if(res.ok)
-          {
-            getStatus();
-          }
-      }
-
-      function updateFloorLight()
-      {
-        var floorLightOn = document.getElementById("floor-light-on");
-        if (currentStatus.floorLight.state == "on") {
-          floorLightOn.style.display = "block";
-        } else {
-          floorLightOn.style.display = "none";
-        }
-
-        var color = currentStatus.floorLight.color;
-        var floorLightLine1 = document.getElementById("floor-light-line1");
-        var floorLightLine2 = document.getElementById("floor-light-line2");
-        var floorLightLine3 = document.getElementById("floor-light-line3");
-        if (color == "white") {
-          floorLightLine1.setAttribute("class", "floor-light-color-white");
-          floorLightLine2.setAttribute("class", "floor-light-color-white");
-          floorLightLine3.setAttribute("class", "floor-light-color-white");
-        } else if (color == "lamp") {
-          floorLightLine1.setAttribute("class", "floor-light-color-lamp");
-          floorLightLine2.setAttribute("class", "floor-light-color-lamp");
-          floorLightLine3.setAttribute("class", "floor-light-color-lamp");
-        } else if (color == "neutralWhite") {
-          floorLightLine1.setAttribute("class", "floor-light-color-neutralWhite");
-          floorLightLine2.setAttribute("class", "floor-light-color-neutralWhite");
-          floorLightLine3.setAttribute("class", "floor-light-color-neutralWhite");
-        }
-      }
-      async function setAirConditionerMode(mode)
-      {
-        var body = {state:mode, temp:currentStatus.airConditioner.temp};
-        lastSendAirConditionerTemp = body.temp;
-        const res = await fetch("/api/airConditioner", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
-        }
-      }
-
-      
-      function updateAirConditionerMode()
-      {
-        var airconditionerWind1 = document.getElementById("airconditioner-wind1");
-        var airconditionerWind2 = document.getElementById("airconditioner-wind2");
-        var airconditionerWind3 = document.getElementById("airconditioner-wind3");
-        var airconditionerWind4 = document.getElementById("airconditioner-wind4");
-        var airconditionerModeButtonOff = document.getElementById("airconditioner-mode-button-off");
-        var airconditionerModeButtonCool = document.getElementById("airconditioner-mode-button-cool");
-        var airconditionerModeButtonHeat = document.getElementById("airconditioner-mode-button-heat");
-        var airconditionerModeButtonDry = document.getElementById("airconditioner-mode-button-dry");
-        var airconditionerModeButtonWind = document.getElementById("airconditioner-mode-button-wind");
-
-        airconditionerModeButtonOff.classList.remove("btn-outline-secondary");
-        airconditionerModeButtonCool.classList.remove("btn-outline-primary");
-        airconditionerModeButtonHeat.classList.remove("btn-outline-danger");
-        airconditionerModeButtonDry.classList.remove("btn-outline-info");
-        airconditionerModeButtonWind.classList.remove("btn-outline-success");
-        airconditionerModeButtonOff.classList.remove("btn-secondary");
-        airconditionerModeButtonCool.classList.remove("btn-primary");
-        airconditionerModeButtonHeat.classList.remove("btn-danger");
-        airconditionerModeButtonDry.classList.remove("btn-info");
-        airconditionerModeButtonWind.classList.remove("btn-success");
-
-
-        if (currentStatus.airConditioner.state == "off") {
-          airconditionerWind1.setAttribute("class", "airconditioner-wind-color-off");
-          airconditionerWind2.setAttribute("class", "airconditioner-wind-color-off");
-          airconditionerWind3.setAttribute("class", "airconditioner-wind-color-off");
-          airconditionerWind4.setAttribute("class", "airconditioner-wind-color-off");
-
-          airconditionerModeButtonOff.classList.add("btn-secondary");
-          airconditionerModeButtonCool.classList.add("btn-outline-primary");
-          airconditionerModeButtonHeat.classList.add("btn-outline-danger");
-          airconditionerModeButtonDry.classList.add("btn-outline-info");
-          airconditionerModeButtonWind.classList.add("btn-outline-success");
-        } else if (currentStatus.airConditioner.state == "cool") {
-          airconditionerWind1.setAttribute("class", "airconditioner-wind-color-cool");
-          airconditionerWind2.setAttribute("class", "airconditioner-wind-color-cool");
-          airconditionerWind3.setAttribute("class", "airconditioner-wind-color-cool");
-          airconditionerWind4.setAttribute("class", "airconditioner-wind-color-cool");
-
-          airconditionerModeButtonOff.classList.add("btn-outline-secondary");
-          airconditionerModeButtonCool.classList.add("btn-primary");
-          airconditionerModeButtonHeat.classList.add("btn-outline-danger");
-          airconditionerModeButtonDry.classList.add("btn-outline-info");
-          airconditionerModeButtonWind.classList.add("btn-outline-success");
-        } else if (currentStatus.airConditioner.state == "heat") {
-          airconditionerWind1.setAttribute("class", "airconditioner-wind-color-heat");
-          airconditionerWind2.setAttribute("class", "airconditioner-wind-color-heat");
-          airconditionerWind3.setAttribute("class", "airconditioner-wind-color-heat");
-          airconditionerWind4.setAttribute("class", "airconditioner-wind-color-heat");
-
-          airconditionerModeButtonOff.classList.add("btn-outline-secondary");
-          airconditionerModeButtonCool.classList.add("btn-outline-primary");
-          airconditionerModeButtonHeat.classList.add("btn-danger");
-          airconditionerModeButtonDry.classList.add("btn-outline-info");
-          airconditionerModeButtonWind.classList.add("btn-outline-success");
-        } else if (currentStatus.airConditioner.state == "dry") {
-          airconditionerWind1.setAttribute("class", "airconditioner-wind-color-dry");
-          airconditionerWind2.setAttribute("class", "airconditioner-wind-color-dry");
-          airconditionerWind3.setAttribute("class", "airconditioner-wind-color-dry");
-          airconditionerWind4.setAttribute("class", "airconditioner-wind-color-dry");
-
-          airconditionerModeButtonOff.classList.add("btn-outline-secondary");
-          airconditionerModeButtonCool.classList.add("btn-outline-primary");
-          airconditionerModeButtonHeat.classList.add("btn-outline-danger");
-          airconditionerModeButtonDry.classList.add("btn-info");
-          airconditionerModeButtonWind.classList.add("btn-outline-success");
-        } else if (currentStatus.airConditioner.state == "wind") {
-          airconditionerWind1.setAttribute("class", "airconditioner-wind-color-wind");
-          airconditionerWind2.setAttribute("class", "airconditioner-wind-color-wind");
-          airconditionerWind3.setAttribute("class", "airconditioner-wind-color-wind");
-          airconditionerWind4.setAttribute("class", "airconditioner-wind-color-wind");
-
-          airconditionerModeButtonOff.classList.add("btn-outline-secondary");
-          airconditionerModeButtonCool.classList.add("btn-outline-primary");
-          airconditionerModeButtonHeat.classList.add("btn-outline-danger");
-          airconditionerModeButtonDry.classList.add("btn-outline-info");
-          airconditionerModeButtonWind.classList.add("btn-success");
-        }
-
-        var temp = changingAirConditionerTemp ? airConditionerTempForChanging : currentStatus.airConditioner.temp;
-
-        var airconditionerTemp = document.getElementById("airconditioner-temp");
-        var airconditionerTempRange = document.getElementById("airconditioner-temp-range");
-        airconditionerTemp.innerHTML = temp;
-        airconditionerTempRange.value = temp;
-      }
-
-      var changingAirConditionerTemp = false;
-      var airConditionerTempForChanging = 20;
-      var lastSendAirConditionerTemp = 20;
-
-      function changeAirConditionerTemp()
-      {
-        var airconditionerTempRange = document.getElementById("airconditioner-temp-range");
-        const temp = airconditionerTempRange.value;
-        airConditionerTempForChanging = temp;
-        changingAirConditionerTemp = true;
-        updateAirConditionerMode();
-      }
-
-      setInterval(async ()=>{
-        if(changingAirConditionerTemp === false)
-        {
-          return;
-        }
-        if(lastSendAirConditionerTemp === airConditionerTempForChanging)
-        {
-          return;
-        }
-
-        const body = {
-          state:currentStatus.airConditioner.state,
-          temp:airConditionerTempForChanging,
-        };
-        lastSendAirConditionerTemp = airConditionerTempForChanging;
-        changingAirConditionerTemp = false;
-        const res = await fetch("/api/airConditioner", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-      },200);
-      
-
-      function updateBathStatus()
-      {
-        var bathEmpty = document.getElementById("bath-empty");
-        var bathDrainage = document.getElementById("bath-drainage");
-        var bathSupply = document.getElementById("bath-supply");
-        var bathFull = document.getElementById("bath-full");
-        if (currentStatus.bath.state == "empty") {
-          bathEmpty.style.display = "block";
-          bathDrainage.style.display = "none";
-          bathSupply.style.display = "none";
-          bathFull.style.display = "none";
-        } else if (currentStatus.bath.state == "drainage") {
-          bathEmpty.style.display = "none";
-          bathDrainage.style.display = "block";
-          bathSupply.style.display = "none";
-          bathFull.style.display = "none";
-        } else if (currentStatus.bath.state == "supply") {
-          bathEmpty.style.display = "none";
-          bathDrainage.style.display = "none";
-          bathSupply.style.display = "block";
-          bathFull.style.display = "none";
-        } else if (currentStatus.bath.state == "full") {
-          bathEmpty.style.display = "none";
-          bathDrainage.style.display = "none";
-          bathSupply.style.display = "none";
-          bathFull.style.display = "block";
-        }
-
-        var bathAutoButton = document.getElementById("bath-auto-button");
-        if (currentStatus.bath.auto == "on") {
-          bathAutoButton.classList.remove("btn-outline-secondary");
-          bathAutoButton.classList.add("btn-primary");
-        } else {
-          bathAutoButton.classList.remove("btn-primary");
-          bathAutoButton.classList.add("btn-outline-secondary");
-        }
-
-        var bathTemp = document.getElementById("bath-temp");
-        bathTemp.innerHTML = currentStatus.bath.temp;
-      }
-
-      async function incrementBathTemp()
-      {
-        const body = {
-          auto:currentStatus.bath.auto,
-          temp:currentStatus.bath.temp+1,
+        let currentStatus = {
+            airConditioner: { state: "off", temp: 20 },
+            ceilingLight: { state: "off" },
+            floorLight: { state: "on", color: "white" },
+            sensorMeter: { temp: 20.0, hum: 50 },
+            motionSensor: { state: "notDetected" },
+            shutter: { state: "closed", position: 0, move: "stopped" },
+            door: { state: "closed", lockState: "unlocked" },
+            bathWaterHeater: { state: "empty", auto: "off", temp: 40, waterLevel: 0 }
         };
 
-        const res = await fetch("/api/bathWaterHeater", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-          if(res.ok)
-          {
-            getStatus();
-          }
-      }
-      async function decementBathTemp()
-      {
-        const body = {
-          auto:currentStatus.bath.auto,
-          temp:currentStatus.bath.temp-1,
-        };
+        // Debounce timers for sliders
+        let acTempTimer = null;
+        let sensorTimer = null;
+        let bathTempTimer = null;
 
-        const res = await fetch("/api/bathWaterHeater", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-          if(res.ok)
-          {
-            getStatus();
-          }
-      }
-      async function ToggleBathAuto()
-      {
-        const body = {
-          auto:currentStatus.bath.auto === "on" ? "off" : "on",
-          temp:currentStatus.bath.temp,
-        };
-        
-        const res = await fetch("/api/bathWaterHeater", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
-        }
-      }
+        // ============================================================
+        // API Functions
+        // ============================================================
 
-      var changingRoomTempAndHum = false;
-      var tempForChanging=20;
-      var humForChanging=50;
-      var lastSendTemp = 20;
-      var lastSendHum = 50;
-      function changeRoomTemp()
-      {
-        changingRoomTempAndHum = true;
-        var roomTempRange = document.getElementById("room-temp-range");
-        var roomHumRange = document.getElementById("room-hum-range");
-        tempForChanging = roomTempRange.value;
-        humForChanging = roomHumRange.value;
-        updateSensor();
-      }
-      
-      function changeRoomHum()
-      {
-        changingRoomTempAndHum = true;
-        var roomTempRange = document.getElementById("room-temp-range");
-        var roomHumRange = document.getElementById("room-hum-range");
-        tempForChanging = roomTempRange.value;
-        humForChanging = roomHumRange.value;
-        updateSensor();
-      }
-
-      setInterval(async ()=>{
-        if(changingRoomTempAndHum === false)
-        {
-          return;
-        }
-        if(lastSendTemp === tempForChanging && lastSendHum === humForChanging)
-        {
-          return;
-        }
-        const body = {
-          temp:tempForChanging,
-          hum:humForChanging,
-        };
-        lastSendTemp = body.temp;
-        lastSendHum = body.hum;
-        changingRoomTempAndHum = false;
-        const res = await fetch("/api/sensorMeter", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
-        }
-      },500);
-      
-      function updateSensor()
-      {
-        {
-          var roomTemp = document.getElementById("room-temp");
-          var temp = changingRoomTempAndHum ? tempForChanging : currentStatus.sensorMeter.temp;
-          roomTemp.innerHTML = temp;
-          var tempValue = temp;
-
-          const tempDeg =
-            (1 - (tempValue - -10) / (40 - -10)) * (200 - -20) + -20;
-          const tempX = Math.cos((Math.PI * tempDeg) / 180);
-          const tempY = Math.sin((Math.PI * tempDeg) / 180);
-
-          const tempLine = document.getElementById("room-temp-line");
-          tempLine.setAttribute("x1", 852 + tempX * 30);
-          tempLine.setAttribute("y1", 169 + tempY * -30);
-          tempLine.setAttribute("x2", 852 - tempX * 5);
-          tempLine.setAttribute("y2", 169 - tempY * -5);
-
-          var roomTempRange = document.getElementById("room-temp-range");
-          roomTempRange.value = temp;
-        }
-        {
-          var roomHum = document.getElementById("room-hum");
-          var hum = changingRoomTempAndHum ? humForChanging : currentStatus.sensorMeter.hum;
-          roomHum.innerHTML = hum;
-          var humValue = hum;
-
-          const humDeg =
-            (1 - (humValue - 0) / (100 - 0)) * (200 - -20) + -20;
-          const humX = Math.cos((Math.PI * humDeg) / 180);
-          const humY = Math.sin((Math.PI * humDeg) / 180);
-
-          const humLine = document.getElementById("room-hum-line");
-          humLine.setAttribute("x1", 852 + humX * 15);
-          humLine.setAttribute("y1", 200 + humY * -15);
-          humLine.setAttribute("x2", 852 - humX * 2);
-          humLine.setAttribute("y2", 200 - humY * -2);
-
-          var roomHumRange = document.getElementById("room-hum-range");
-          roomHumRange.value = hum;
-        }
-      }
-
-
-      async function toggleHumanSensor()
-      {
-        const body = {state:"detected"};
-        if (currentStatus.motionSensor.state == "detected") {
-          body.state = "notDetected";
-        } else {
-          body.state = "detected";
-        }
-        const res = await fetch("/api/motionSensor", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
-        }
-      }
-
-      function updateMotionSensor()
-      {
-        var humanSensor = document.getElementById("human-sensor");
-        if (currentStatus.motionSensor.state == "detected") {
-          humanSensor.style.display = "block";
-        } else {
-          humanSensor.style.display = "none";
-        }
-      }
-
-      function updateShutterMode()
-      {
-        var shutterOpened = document.getElementById("shutter-opened");
-        var shutterOpening = document.getElementById("shutter-opening");
-        var shutterHalfOpen = document.getElementById("shutter-halfOpen");
-        var shutterClosing = document.getElementById("shutter-closing");
-        var shutterClosed = document.getElementById("shutter-closed");
-        if (currentStatus.shutter.state == "opened") {
-          shutterOpened.style.display = "block";
-          shutterOpening.style.display = "none";
-          shutterHalfOpen.style.display = "none";
-          shutterClosing.style.display = "none";
-          shutterClosed.style.display = "none";
-        } else if (currentStatus.shutter.state == "opening") {
-          shutterOpened.style.display = "none";
-          shutterOpening.style.display = "block";
-          shutterHalfOpen.style.display = "none";
-          shutterClosing.style.display = "none";
-          shutterClosed.style.display = "none";
-        } else if (currentStatus.shutter.state == "halfOpen") {
-          shutterOpened.style.display = "none";
-          shutterOpening.style.display = "none";
-          shutterHalfOpen.style.display = "block";
-          shutterClosing.style.display = "none";
-          shutterClosed.style.display = "none";
-        } else if (currentStatus.shutter.state == "closing") {
-          shutterOpened.style.display = "none";
-          shutterOpening.style.display = "none";
-          shutterHalfOpen.style.display = "none";
-          shutterClosing.style.display = "block";
-          shutterClosed.style.display = "none";
-        } else if (currentStatus.shutter.state == "closed") {
-          shutterOpened.style.display = "none";
-          shutterOpening.style.display = "none";
-          shutterHalfOpen.style.display = "none";
-          shutterClosing.style.display = "none";
-          shutterClosed.style.display = "block";
-        }
-      }
-      async function openShutter()
-      {
-        const body = {move:"opening"};
-        const res = await fetch("/api/shutter", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
+        async function sendInstanceListNotification() {
+            try {
+                await fetch("/api/commands/instanceListNotification", { method: "POST" });
+            } catch (e) {
+                console.error("Failed to send instance list notification:", e);
+            }
         }
 
-      }
-      async function closeShutter()
-      {
-        const body = {move:"closing"};
-        const res = await fetch("/api/shutter", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
+        // Air Conditioner
+        async function setACMode(mode) {
+            try {
+                const res = await fetch("/api/airConditioner", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: mode, temp: currentStatus.airConditioner.temp })
+                });
+                if (res.ok) getStatus();
+            } catch (e) { console.error("AC mode error:", e); }
         }
 
-      }
-      async function stopShutter()
-      {
-        const body = {move:"stopped"};
-        const res = await fetch("/api/shutter", 
-            {method: "POST", body:JSON.stringify(body), headers:{'Content-Type': 'application/json'}});
-        if(res.ok)
-        {
-          getStatus();
+        function updateACTempDisplay() {
+            const slider = document.getElementById('ac-temp-slider');
+            document.getElementById('ac-temp-slider-val').textContent = slider.value + '°C';
+            
+            clearTimeout(acTempTimer);
+            acTempTimer = setTimeout(async () => {
+                try {
+                    await fetch("/api/airConditioner", {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            state: currentStatus.airConditioner.state, 
+                            temp: parseInt(slider.value) 
+                        })
+                    });
+                    getStatus();
+                } catch (e) { console.error("AC temp error:", e); }
+            }, 300);
         }
-      }
 
-      var currentStatus = {
-        light:{state:"off"},
-        sensorMeter:{temp:0.0, hum:0.0},
-        motionSensor:{state:"notDetected"},
-        floorLight:{state:"off", color:"lamp"},
-        shutter:{state:"closed", move:"stopped"},
-        door:{state:"opened", lockState:"locked"},
-        bath:{state:"full", auto:"off", temp:38},
-        airConditioner:{state:"cool", temp:30}
-      }
+        // Ceiling Light
+        async function toggleCeilingLight() {
+            const newState = currentStatus.ceilingLight.state === "on" ? "off" : "on";
+            await setCeilingLight(newState === "on");
+        }
 
-      async function getStatus()
-      {
-        const res = await fetch("/api/status");
-        const status = await res.json();
-        if(currentStatus.light.state !== status.light.state)
-        {
-          currentStatus.light.state = status.light.state;
-          updateCellingLight();
+        async function setCeilingLight(on) {
+            try {
+                await fetch("/api/cellingLight", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: on ? "on" : "off" })
+                });
+                getStatus();
+            } catch (e) { console.error("Ceiling light error:", e); }
         }
-        if(currentStatus.floorLight.state !== status.floorLight.state ||
-          currentStatus.floorLight.color !== status.floorLight.color)
-        {
-          currentStatus.floorLight.state = status.floorLight.state;
-          currentStatus.floorLight.color = status.floorLight.color;
-          updateFloorLight();
-        }
-        if(currentStatus.bath.auto !== status.bath.auto ||
-        currentStatus.bath.temp !== status.bath.temp ||
-        currentStatus.bath.state !== status.bath.state)
-        {
-          currentStatus.bath.auto = status.bath.auto;
-          currentStatus.bath.temp = status.bath.temp;
-          currentStatus.bath.state = status.bath.state;
-          updateBathStatus();
-        }
-        if(currentStatus.shutter.state !== status.shutter.state)
-        {
-          currentStatus.shutter.state = status.shutter.state;
-          updateShutterMode();
-        }
-        if(currentStatus.motionSensor.state !== status.motionSensor.state)
-        {
-          currentStatus.motionSensor.state = status.motionSensor.state;
-          updateMotionSensor();
-        }
-        if(currentStatus.door.state !== status.door.state ||
-          currentStatus.door.lockState !== status.door.lockState)
-        {
-          currentStatus.door.state = status.door.state;
-          currentStatus.door.lockState = status.door.lockState;
-          updateEntranceDoor();
-        }
-        if(currentStatus.sensorMeter.temp !== status.sensorMeter.temp || 
-          currentStatus.sensorMeter.hum !== status.sensorMeter.hum)
-        {
-          currentStatus.sensorMeter.temp = status.sensorMeter.temp;
-          currentStatus.sensorMeter.hum = status.sensorMeter.hum;
-          updateSensor();
-        }
-        if(currentStatus.airConditioner.state !== status.airConditioner.state ||
-          currentStatus.airConditioner.temp !== status.airConditioner.temp)
-        {
-          currentStatus.airConditioner.state = status.airConditioner.state;
-          currentStatus.airConditioner.temp = status.airConditioner.temp;
-          updateAirConditionerMode();
-        }
-      }
 
-      getStatus();
-      setInterval(getStatus, 1000);
+        // Floor Light
+        async function setFloorColor(color) {
+            try {
+                await fetch("/api/floorLight", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: currentStatus.floorLight.state, color })
+                });
+                getStatus();
+            } catch (e) { console.error("Floor light error:", e); }
+        }
 
+        async function cycleFloorLight() {
+            const colors = ["white", "neutralWhite", "lamp"];
+            const currentIndex = colors.indexOf(currentStatus.floorLight.color);
+            const nextColor = colors[(currentIndex + 1) % colors.length];
+            await setFloorColor(nextColor);
+        }
+
+        // Temperature & Humidity Sensors
+        function updateTempDisplay() {
+            const slider = document.getElementById('temp-slider');
+            document.getElementById('temp-slider-val').textContent = parseFloat(slider.value).toFixed(1) + '°C';
+            
+            clearTimeout(sensorTimer);
+            sensorTimer = setTimeout(async () => {
+                try {
+                    await fetch("/api/sensorMeter", {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            temp: parseFloat(slider.value), 
+                            hum: currentStatus.sensorMeter.hum 
+                        })
+                    });
+                    getStatus();
+                } catch (e) { console.error("Temp sensor error:", e); }
+            }, 300);
+        }
+
+        function updateHumDisplay() {
+            const slider = document.getElementById('hum-slider');
+            document.getElementById('hum-slider-val').textContent = slider.value + '%';
+            
+            clearTimeout(sensorTimer);
+            sensorTimer = setTimeout(async () => {
+                try {
+                    await fetch("/api/sensorMeter", {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            temp: currentStatus.sensorMeter.temp, 
+                            hum: parseInt(slider.value) 
+                        })
+                    });
+                    getStatus();
+                } catch (e) { console.error("Hum sensor error:", e); }
+            }, 300);
+        }
+
+        // Motion Sensor
+        async function setMotion(detected) {
+            try {
+                await fetch("/api/motionSensor", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ state: detected ? "detected" : "notDetected" })
+                });
+                getStatus();
+            } catch (e) { console.error("Motion sensor error:", e); }
+        }
+
+        // Shutter
+        async function setShutter(move) {
+            try {
+                await fetch("/api/shutter", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ move })
+                });
+                getStatus();
+            } catch (e) { console.error("Shutter error:", e); }
+        }
+
+        // Door
+        async function setDoor(state) {
+            try {
+                await fetch("/api/door", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        state, 
+                        lockState: currentStatus.door.lockState 
+                    })
+                });
+                getStatus();
+            } catch (e) { console.error("Door error:", e); }
+        }
+
+        async function setDoorLock(lockState) {
+            try {
+                await fetch("/api/door", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        state: currentStatus.door.state, 
+                        lockState 
+                    })
+                });
+                getStatus();
+            } catch (e) { console.error("Door lock error:", e); }
+        }
+
+        // Bath Water Heater
+        function updateBathTempDisplay() {
+            const slider = document.getElementById('bath-temp-slider');
+            document.getElementById('bath-temp-slider-val').textContent = slider.value + '°C';
+            
+            clearTimeout(bathTempTimer);
+            bathTempTimer = setTimeout(async () => {
+                try {
+                    await fetch("/api/bathWaterHeater", {
+                        method: "POST",
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            auto: currentStatus.bathWaterHeater.auto, 
+                            temp: parseInt(slider.value) 
+                        })
+                    });
+                    getStatus();
+                } catch (e) { console.error("Bath temp error:", e); }
+            }, 300);
+        }
+
+        async function setBathAuto(on) {
+            try {
+                await fetch("/api/bathWaterHeater", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        auto: on ? "on" : "off", 
+                        temp: currentStatus.bathWaterHeater.temp 
+                    })
+                });
+                getStatus();
+            } catch (e) { console.error("Bath auto error:", e); }
+        }
+
+        // Device Toggle (enable/disable)
+        async function toggleDevice(device, enabled) {
+            // This would typically call an API to enable/disable devices
+            const card = document.getElementById('card-' + device);
+            if (card) {
+                card.classList.toggle('disabled', !enabled);
+            }
+        }
+
+        // ============================================================
+        // Status Update Functions
+        // ============================================================
+
+        function updateACStatus() {
+            const state = currentStatus.airConditioner.state;
+            document.getElementById('ac-mode-display').textContent = state.toUpperCase();
+            document.getElementById('ac-temp-display').textContent = currentStatus.airConditioner.temp;
+            
+            // Update mode buttons
+            document.querySelectorAll('#ac-modes .mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === state);
+            });
+
+            // Update slider
+            const slider = document.getElementById('ac-temp-slider');
+            if (document.activeElement !== slider) {
+                slider.value = currentStatus.airConditioner.temp;
+            }
+            document.getElementById('ac-temp-slider-val').textContent = currentStatus.airConditioner.temp + '°C';
+        }
+
+        function updateCeilingLightStatus() {
+            const state = currentStatus.ceilingLight.state.toUpperCase();
+            document.getElementById('cl-state-display').textContent = state;
+            document.getElementById('cl-on-btn').classList.toggle('active', state === 'ON');
+            document.getElementById('cl-off-btn').classList.toggle('active', state === 'OFF');
+        }
+
+        function updateFloorLightStatus() {
+            const state = currentStatus.floorLight.state.toUpperCase();
+            const color = currentStatus.floorLight.color.replace(/([A-Z])/g, ' $1').trim();
+            document.getElementById('fl-state-display').textContent = state;
+            document.getElementById('fl-color-display').textContent = color;
+
+            document.querySelectorAll('#fl-colors .mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.color === currentStatus.floorLight.color);
+            });
+        }
+
+        function updateSensorStatus() {
+            const temp = currentStatus.sensorMeter.temp;
+            const hum = currentStatus.sensorMeter.hum;
+            
+            document.getElementById('temp-display').textContent = temp.toFixed(1);
+            document.getElementById('hum-display').textContent = hum;
+
+            const tempSlider = document.getElementById('temp-slider');
+            if (document.activeElement !== tempSlider) {
+                tempSlider.value = temp;
+            }
+            document.getElementById('temp-slider-val').textContent = temp.toFixed(1) + '°C';
+
+            const humSlider = document.getElementById('hum-slider');
+            if (document.activeElement !== humSlider) {
+                humSlider.value = hum;
+            }
+            document.getElementById('hum-slider-val').textContent = hum + '%';
+        }
+
+        function updateMotionStatus() {
+            const state = currentStatus.motionSensor.state === "detected" ? "DETECTED" : "CLEAR";
+            document.getElementById('motion-display').textContent = state;
+        }
+
+        function updateShutterStatus() {
+            const state = currentStatus.shutter.state.charAt(0).toUpperCase() + currentStatus.shutter.state.slice(1);
+            const pos = currentStatus.shutter.position;
+            
+            document.getElementById('shutter-state-display').textContent = state;
+            document.getElementById('shutter-pos-display').textContent = pos;
+            document.getElementById('shutter-progress').style.width = pos + '%';
+        }
+
+        function updateDoorStatus() {
+            const doorState = currentStatus.door.state.charAt(0).toUpperCase() + currentStatus.door.state.slice(1);
+            const lockState = currentStatus.door.lockState === "locked" ? "LOCKED" : "UNLOCKED";
+            
+            document.getElementById('door-state-display').textContent = doorState;
+            document.getElementById('door-lock-display').textContent = lockState;
+        }
+
+        function updateBathStatus() {
+            const state = currentStatus.bathWaterHeater.state.charAt(0).toUpperCase() + currentStatus.bathWaterHeater.state.slice(1);
+            const temp = currentStatus.bathWaterHeater.temp;
+            
+            document.getElementById('bath-state-display').textContent = state;
+            document.getElementById('bath-temp-display').textContent = temp;
+
+            // Update water level progress
+            const waterLevel = currentStatus.bathWaterHeater.waterLevel || 0;
+            document.getElementById('bath-progress').style.width = waterLevel + '%';
+
+            // Update auto mode buttons
+            document.getElementById('bath-auto-on').classList.toggle('active', currentStatus.bathWaterHeater.auto === 'on');
+            document.getElementById('bath-auto-off').classList.toggle('active', currentStatus.bathWaterHeater.auto === 'off');
+
+            // Update slider
+            const slider = document.getElementById('bath-temp-slider');
+            if (document.activeElement !== slider) {
+                slider.value = temp;
+            }
+            document.getElementById('bath-temp-slider-val').textContent = temp + '°C';
+        }
+
+        // ============================================================
+        // Main Status Polling
+        // ============================================================
+
+        async function getStatus() {
+            try {
+                const res = await fetch("/api/status");
+                if (!res.ok) return;
+                
+                const status = await res.json();
+                
+                // Map API response to our state object
+                if (status.airConditioner) {
+                    currentStatus.airConditioner = status.airConditioner;
+                    updateACStatus();
+                }
+                if (status.ceilingLight !== undefined || status.light) {
+                    currentStatus.ceilingLight = status.ceilingLight || status.light;
+                    updateCeilingLightStatus();
+                }
+                if (status.floorLight) {
+                    currentStatus.floorLight = status.floorLight;
+                    updateFloorLightStatus();
+                }
+                if (status.sensorMeter) {
+                    currentStatus.sensorMeter = status.sensorMeter;
+                    updateSensorStatus();
+                }
+                if (status.motionSensor) {
+                    currentStatus.motionSensor = status.motionSensor;
+                    updateMotionStatus();
+                }
+                if (status.shutter) {
+                    currentStatus.shutter = status.shutter;
+                    updateShutterStatus();
+                }
+                if (status.door) {
+                    currentStatus.door = status.door;
+                    updateDoorStatus();
+                }
+                if (status.bathWaterHeater || status.bath) {
+                    currentStatus.bathWaterHeater = status.bathWaterHeater || status.bath;
+                    updateBathStatus();
+                }
+
+                // Update connection indicator
+                document.getElementById('connectionDot').style.backgroundColor = 'var(--accent-green)';
+                document.getElementById('connectionStatus').textContent = 'Connected';
+            } catch (e) {
+                // Connection error
+                document.getElementById('connectionDot').style.backgroundColor = 'var(--accent-red)';
+                document.getElementById('connectionStatus').textContent = 'Disconnected';
+            }
+        }
+
+        // Initialize
+        getStatus();
+        setInterval(getStatus, 1000);
     </script>
-  </body>
+</body>
 </html>

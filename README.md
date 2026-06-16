@@ -4,11 +4,11 @@
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/scottyphillips/echonet-lite-kaden-emulator/action.yml)](https://github.com/scottyphillips/echonet-lite-kaden-emulator/actions/workflows/action.yml)
 [![Docker Hub](https://img.shields.io/docker/pulls/scottyphillips/echonet-lite-kaden-emulator)](https://hub.docker.com/r/scottyphillips/echonet-lite-kaden-emulator)
 
-An ECHONET Lite emulator that controls virtual home appliances.
+An ECHONET Lite emulator that controls virtual home appliances. **This project is a fork of the original [banban525/echonet-lite-kaden-emulator](https://github.com/banban525/echonet-lite-kaden-emulator).**
 
 ## Description
 
-This emulator allows you to control virtual devices via a web browser and expose their state using the UDP-based ECHONET Lite protocol. You can also control these virtual devices through ECHONET Lite commands sent over UDP.
+This emulator allows you to control virtual devices via a professional web-based dashboard and expose their state using the UDP-based ECHONET Lite protocol. You can also control these virtual devices through ECHONET Lite commands sent over UDP.
 
 ![preview](example/preview.jpg)
 
@@ -33,12 +33,36 @@ This emulator follows the [ECHONET Device Object Specification Release P](https:
 
 ## Features
 
+- **Professional Dashboard UI**: Modern dark-themed interface with real-time status updates, device cards, and intuitive controls
 - **ECHONET Protocol Compatibility**: Full TID preservation, response aggregation (OPC), and INF notification support
 - **Pychonet Compatible**: Tested and verified working with [pychonet](https://github.com/michmich37/pychonet) Python library
-- **Web UI**: Browser-based control interface for all supported devices
 - **REST API**: HTTP endpoints for device status queries and state changes
 - **Plugin Architecture**: Extensible design allowing new device types to be added as plugins
 - **Multi-Device Configuration**: Enable/disable individual devices via configuration file
+
+## Web Interface
+
+The web interface features a professional, card-based dashboard layout:
+
+- **Real-time Status Monitoring**: Live updates for all connected devices (1-second polling)
+- **Interactive Device Controls**: Mode selectors, temperature sliders, toggle switches, and action buttons
+- **Connection Status Indicator**: Visual feedback for server connectivity
+- **Responsive Design**: Works on desktop and mobile browsers
+- **Device Management**: Per-device enable/disable toggles
+
+### Supported Devices
+
+| Device | Controls |
+|--------|----------|
+| Air Conditioner | Mode (OFF/COOL/HEAT/DRY/WIND), Temperature slider |
+| Ceiling Light | ON/OFF/Toggle |
+| Floor Light | Color temperature (White/Neutral White/Lamp), Cycle |
+| Temperature Sensor | Adjustable reading via slider |
+| Humidity Sensor | Adjustable reading via slider |
+| Motion Sensor | Detect/Clear buttons |
+| Shutter | Open/Stop/Close with position progress bar |
+| Entrance Door | Open/Close, Lock/Unlock controls |
+| Bath Water Heater | Auto mode, Temperature setting, Water level indicator |
 
 ## Usage
 
@@ -188,16 +212,15 @@ The configuration file allows enabling/disabling individual devices and setting 
 | GET | `/api/airConditioner` | Get air conditioner status |
 | POST | `/api/airConditioner` | Set air conditioner state |
 
-## Third-Party Usage
-
-- Images used in the application are from [irasutoya.com](https://www.irasutoya.com/) (Irasutoya) - Illustration library.
-
 ## License
 
 [MIT](LICENSE)
 
-## Author
+## Credits
 
-- Original project: [banban525](https://github.com/banban525/echonet-lite-kaden-emulator)
+This project is a fork of the original **[banban525/echonet-lite-kaden-emulator](https://github.com/banban525/echonet-lite-kaden-emulator)** created by **banban525**. We extend our thanks for the foundational work that made this continuation possible.
+
+### Maintainers
+
 - Current maintainer: [scottyphillips](https://github.com/scottyphillips/echonet-lite-kaden-emulator)
 - Modernization and plugin architecture: [scottyphillips](https://github.com/scottyphillips)
