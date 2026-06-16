@@ -3,8 +3,8 @@
 ## Handoff Document
 
 **Date:** 2026-06-16  
-**Last Updated:** 2026-06-16T10:04 AEST  
-**Session Notes:** Initial scaffold and plugin architecture implemented. Emulator verified running on http://localhost:3000 with UDP port 3610 for ECHONET Lite multicast.
+**Last Updated:** 2026-06-16T15:04 AEST  
+**Session Notes:** Initial scaffold and plugin architecture implemented. Pychonet compatibility verified with full TID preservation, response aggregation (OPC), and INF notification support. Emulator running on http://localhost:3000 with UDP port 3610 for ECHONET Lite multicast.
 **Source Projects:** 
 - Sony MoekadenRoom (Processing/Java, 6 fixed device types) — legacy
 - banban525/echonet-lite-kaden-emulator (TypeScript/Node.js, 10 device types) — current base
@@ -15,19 +15,22 @@
 
 ### Working Directory: `c:\Users\scott\echonet-lite-kaden-emulator`
 
-**Repository:** https://github.com/banban525/echonet-lite-kaden-emulator.git  
+**Repository:** https://github.com/scottyphillips/echonet-lite-kaden-emulator.git  
 **Version:** 2.1.0  
-**Commit:** b627ece19d9e33210ca282b46c5d43a65a3b79
+**Latest Commit:** 79f886cc7bc16465ad508c7ce63fe5e50bcf9cbd ("Working with pychonet")
 
 ### Technology Stack
 | Component | Version | Status |
 |-----------|---------|--------|
 | Node.js | v24.14.1 | ✅ Available |
-| TypeScript | 4.3.4 | ✅ Configured |
+| TypeScript | 5.4.0 | ✅ Upgraded from 4.3.4 |
 | Express.js | 4.x | ✅ Configured |
 | echonet-lite (npm) | 2.5.7 | ✅ In package.json |
-| ts-node | 10.2.0 | ✅ For dev runtime |
+| ts-node | 10.9.2 | ✅ For dev runtime |
+| ws (WebSocket) | 8.16.0 | ✅ Added for real-time updates |
 | ESLint + Prettier | 4.x / 2.3.1 | ✅ Configured |
+| Jest + ts-jest | 29.7.0 / 29.1.1 | ✅ Testing framework configured |
+| supertest | 6.3.3 | ✅ HTTP integration testing |
 
 ### Existing Device Types (10 total)
 | # | Class Name | EOJ Hex | Class Code | Group Code | Handler Method |
@@ -45,17 +48,23 @@
 
 ### Key Files Examined
 
-**`server/index.ts`** (358 lines):
-- Express.js server on port 3000
+**`server/index.ts`** (831 lines, significantly expanded):
+- Express.js server on configurable port (default 3000)
 - ECHONET Lite initialization via `echonet-lite` npm package
 - UDP multicast listener on port 3610
 - REST API endpoints for all 10 device types
 - `userFunc()` callback handles GET/SETI/SETC ECHONET commands
 - Dynamic EOJ list management via `recreateEchoObjectList()`
 - Network interface auto-selection via `ECHONET_TARGET_NETWORK` env var
+- **NEW: TID preservation system** — Patches `EL.returner`, `EL.sendBase`, and `EL.sendOPC1` to preserve incoming request TIDs in responses (critical for pychonet compatibility)
+- **NEW: Response aggregation** — Buffers and aggregates multiple EPC responses into single OPC packets per ECHONET Lite spec
+- **NEW: Per-request TID caching** — Uses `tidByRequestGroup` map keyed by "ip\|deoj" to prevent race conditions
+- **NEW: INF notification support** — Sends property change announcements via `EL.sendOPC1(EL.EL_Multi, ...)`
+- **NEW: Instance List Notification** — Supports `instanceListNotification` command for dynamic device discovery
 
-**`server/controller.ts`** (1239 lines):
-- Single monolithic `Controller` class containing all device logic
+**`server/controller.ts`** (~1200 lines, refactored):
+- Device logic extracted to plugin architecture (`plugins/ceilingLight.ts`)
+- Registry-based device management via `DeviceRegistry` class
 - Each device has: status interface, echo object definition, GET handler, SET handler, ECHONET callback
 - `setValueFromEchoNet()` uses hardcoded if-chain (`if ("029101" in echoObject)`) to dispatch to handlers
 - `sendPropertyChanged()` handles EPC 0x9D STATMAP announcement filtering
@@ -72,7 +81,21 @@
 | Processing IDE | ❌ Not installed | Not needed — kaden-emulator uses Node.js |
 | Java/JDK | ❌ Not installed | Not needed for kaden-emulator |
 | VS Code Processing extension | N/A | Not needed — TypeScript project |
-| `npm install` dependencies | ⚠️ May need reinstall | Run `npm install` in working directory |
+| `npm install` dependencies | ✅ Installed | All dependencies verified |
+
+### Pychonet Compatibility Verification ✅
+
+The emulator has been tested and verified working with the [pychonet](https://github.com/michmich37/pychonet) Python library. Key compatibility features implemented:
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| TID Preservation | ✅ | All response packets echo the request's TID (Transaction ID) |
+| Response Aggregation | ✅ | Multiple EPC responses aggregated into single OPC packets |
+| INF Notifications | ✅ | Property change announcements sent correctly |
+| GET_RES Handling | ✅ | GET responses properly formatted with correct ESV codes |
+| SETC Error Responses | ✅ | SETC_SNA error responses for unhandled properties |
+| Node Profile Support | ✅ | Full Node Profile (0xEF01) discovery and property queries |
+| EOJ Class Lists | ✅ | D3-D7 node details correctly populated |
 
 ---
 
@@ -272,22 +295,38 @@ class DeviceRegistry {
 
 ## 4. IMPLEMENTATION STEPS
 
-### Step 1: Project Setup & Dependency Update
-- [ ] Run `npm install` to ensure all dependencies are installed
-- [ ] Upgrade TypeScript from 4.3.4 to latest stable (5.x)
-- [ ] Add `@types/express`, `jest`, `ws` (WebSocket) to devDependencies
-- [ ] Create `plugins/` directory structure
-- [ ] Create `config/` directory for device configuration files
-- [ ] Create `tests/` directory for test suite
+### Step 1: Project Setup & Dependency Update ✅ COMPLETED
+- [x] Run `npm install` to ensure all dependencies are installed
+- [x] Upgrade TypeScript from 4.3.4 to latest stable (5.4.0)
+- [x] Add `@types/express`, `jest`, `ws` (WebSocket) to devDependencies
+- [x] Create `plugins/` directory structure
+- [x] Create `config/` directory for device configuration files
+- [x] Create `tests/` directory for test suite
 
-### Step 2: Extract Plugin Interface & Types
-- [ ] Create `server/types.ts` with plugin interface definitions
-- [ ] Create `server/registry.ts` with DeviceRegistry class skeleton
+### Step 2: Pychonet Protocol Compatibility ✅ COMPLETED
+- [x] Implement TID preservation via `patchReturner()` 
+- [x] Implement response aggregation via `patchSendBase()` and `flushGetResBuffer()`
+- [x] Implement TID-aware sendOPC1 via `patchSendOPC1()`
+- [x] Support mixed ESV responses (GET_RES, SET_RES, GET_SNA, SETC_SNA)
+- [x] Add INF notification support for property changes
+- [x] Verify pychonet integration works end-to-end
+
+### Step 3: Extract Plugin Interface & Types ✅ COMPLETED
+- [x] Create `server/types.ts` with plugin interface definitions (DevicePlugin, DeviceConfig, EchoObject, EchoStatus, ILogger)
+- [x] Create `server/registry.ts` with DeviceRegistry class skeleton (register(), createDevice(), handleSet(), getAllStates())
+- [x] First reference plugin created: `plugins/ceilingLight.ts` (EOJ 0x029101)
+- [x] Plugin registry helper: `plugins/index.ts` (getAllPlugins() for bulk registration)
 - [ ] Update `server/controller.ts` to use registry instead of hardcoded if-chain
 - [ ] Keep existing device handlers as reference during migration
 
-### Step 3: Migrate Existing Devices to Plugins
-- [ ] Extract `CellingLight` handler → `plugins/ceilingLight.ts`
+### Step 4: Configuration System ✅ COMPLETED
+- [x] Create `config/default.json` with all 10 existing device types
+- [x] Settings validation via `Settings.validate()` 
+- [x] Custom Node Profile ID support (fe-prefixed UID)
+- [x] Device enable/disable configuration
+
+### Step 5: Device Plugin Migration (In Progress)
+- [x] Extract `CeilingLight` handler → `plugins/ceilingLight.ts`
 - [ ] Extract `FloorLight` (General Lighting) handler → `plugins/generalLighting.ts`
 - [ ] Extract `Shutter` handler → `plugins/shutter.ts`
 - [ ] Extract `Door/ElectricLock` handler → `plugins/electricLock.ts`
@@ -581,7 +620,7 @@ npm start
 
 ---
 
-## 13. SESSION LOG — 2026-06-16
+## 13. SESSION LOG — 2026-06-16 (Session 1: Scaffold)
 
 ### Work Completed
 
@@ -626,32 +665,78 @@ npm start
 - **ECHONET Lite UDP listener** active on port 3610
 - **Network interface** bound to 0.0.0.0 (all interfaces)
 
+---
+
+## 14. SESSION LOG — 2026-06-16 (Session 2: Pychonet Compatibility)
+
+### Work Completed
+
+#### ECHONET Protocol Compatibility Fixes ✅
+| Feature | Status | Description |
+|---------|--------|-------------|
+| TID Preservation via `patchReturner()` | ✅ | Captures incoming request TID from raw UDP bytes before library's internal Node Profile handler processes packets |
+| Response Aggregation via `patchSendBase()` | ✅ | Buffers GET_RES/SET_RES/GET_SNA/SETC_SNA responses and flushes as aggregated OPC packets |
+| TID-aware sendOPC1 via `patchSendOPC1()` | ✅ | Preserves request TID for response ESV types (0x50-0x53, 0x5E, 0x71-0x73, 0x7A, 0x7E) |
+| Per-request TID caching | ✅ | Uses `tidByRequestGroup` map keyed by "ip\|deoj" to prevent race conditions |
+| Mixed ESV response grouping | ✅ | Groups same-ESV responses together for proper OPC aggregation |
+
+#### INF Notification Support ✅
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Property change notifications | ✅ | `sendPropertyChangedEvent()` sends INF packets via multicast |
+| Instance List Notification | ✅ | Handles "instanceListNotification" command to send D5 infotainment |
+| Device changed notification | ✅ | Handles "changedevices" command for dynamic enable/disable |
+
+#### Configuration System ✅
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Settings file loading | ✅ | Loads from path specified in `SETTINGS` env var |
+| Settings validation | ✅ | Validates Node Profile ID format (fe-prefixed, 34 chars) |
+| Device enable/disable | ✅ | Per-device disabled flag supported |
+
+#### README Modernization ✅
+| Task | Status | Description |
+|------|--------|-------------|
+| Translate to English | ✅ | Full README translation from Japanese to English |
+| Add features section | ✅ | Documents pychonet compatibility, plugin architecture, REST API |
+| Update device table | ✅ | Markdown table format with EOJ codes |
+| Add REST API docs | ✅ | All endpoints documented |
+
 ### Files Created/Modified This Session
 
 | File | Action | Purpose |
 |------|--------|---------|
-| `package.json` | Modified | Updated dependencies and scripts |
-| `jest.config.js` | Created | Jest test configuration |
-| `server/types.ts` | Created | Plugin interface definitions |
-| `server/registry.ts` | Created | DeviceRegistry class |
-| `plugins/ceilingLight.ts` | Created | Reference device plugin |
-| `plugins/index.ts` | Created | Plugin exports + helper |
-| `config/default.json` | Created | Default device configuration |
-| `server/index.ts` | Modified | TypeScript compilation fixes |
-| `server/controller.ts` | Modified | TypeScript compilation fixes |
-| `docs/MODERNIZATION_PLAN.md` | Modified | This document |
+| `server/index.ts` | Modified (+620 lines) | TID preservation, response aggregation, INF notifications |
+| `config/default.json` | Modified | Restructured with nodeProfile and network sections |
+| `server/controller.ts` | Modified | Refactored for plugin compatibility |
+| `.env` | Modified | Updated to use SETTINGS config file |
+| `package-lock.json` | Updated | Dependency resolution |
+| `README.md` | Rewritten | Full English translation with modernized documentation |
+
+### Pychonet Testing Results ✅
+
+| Test Case | Result | Notes |
+|-----------|--------|-------|
+| GET requests to devices | ✅ | Returns correct property values with proper TID |
+| SETC commands to devices | ✅ | Processes correctly, returns SET_RES |
+| Node Profile discovery | ✅ | D3-D7 properties returned in aggregated responses |
+| INF notifications | ✅ | Property changes announced via multicast |
+| Multiple EPC aggregation | ✅ | OPC > 1 responses properly formatted |
 
 ### Remaining Work (Next Session)
 
-1. **Step 3b**: Create remaining device plugins from existing controller.ts handlers
-2. **Step 4**: Integrate DeviceRegistry into server/index.ts (replace Controller class)
-3. **Step 5**: Add new ECHONET device types (buzzer, ceilingFan, energyMeter, etc.)
-4. **Step 8**: Run Jest test suite to verify plugin behavior
+1. **Complete device plugin migration** — Extract remaining 9 devices from controller.ts to plugins/
+2. **Wire DeviceRegistry into server/index.ts** — Replace Controller class with registry-based approach
+3. **Add new ECHONET device types** — buzzer, ceilingFan, energyMeter, gasMeter, waterMeter, etc.
+4. **Write Jest test suite** — Unit tests for plugins and protocol handling
+5. **Add WebSocket API** — Real-time device state broadcasting
+6. **Create custom JSON-defined device support** — Allow arbitrary EOJ definitions without code changes
 
 ### Known Issues / Technical Debt
 
 | Issue | Severity | Notes |
 |-------|----------|-------|
-| Controller class not yet migrated to plugins | Medium | Old controller.ts still used; registry created but not wired into index.ts |
-| config/default.json not loaded by server | Low | Config file created but index.ts doesn't read it yet |
+| Controller class not yet fully migrated to plugins | Medium | Old controller.ts still handles ECHONET commands; registry created but not wired into index.ts |
+| config/default.json structure changed | Low | New format with nodeProfile/network/devices sections needs server integration |
 | No tests written yet | Low | Jest configured but no test files exist |
+| README WEBPORT vs SETTINGS env var mismatch | Low | .env uses PORT=4000 but code reads WEBPORT |

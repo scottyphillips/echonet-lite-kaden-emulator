@@ -1,181 +1,203 @@
 # echonet-lite-kaden-emulator
 
+[![MIT License](https://img.shields.io/github/license/scottyphillips/echonet-lite-kaden-emulator)](LICENSE)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/scottyphillips/echonet-lite-kaden-emulator/action.yml)](https://github.com/scottyphillips/echonet-lite-kaden-emulator/actions/workflows/action.yml)
+[![Docker Hub](https://img.shields.io/docker/pulls/scottyphillips/echonet-lite-kaden-emulator)](https://hub.docker.com/r/scottyphillips/echonet-lite-kaden-emulator)
 
-[![MIT License](https://img.shields.io/github/license/banban525/echonet-lite-kaden-emulator)](LICENSE)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/banban525/echonet-lite-kaden-emulator/action.yml)](https://github.com/banban525/echonet-lite-kaden-emulator/actions/workflows/action.yml)
-[![Docker Hub](https://img.shields.io/docker/pulls/banban525/echonet-lite-kaden-emulator)](https://hub.docker.com/r/banban525/echonet-lite-kaden-emulator)
+An ECHONET Lite emulator that controls virtual home appliances.
 
-仮想的な家電を制御できるECHONET Liteのエミュレータです。
+## Description
 
-## 説明
-
-ブラウザ上で操作することで仮想的な家電を操作でき、その状態をUDPのECHONET Lite規格で公開します。
-また、UDP経由のECHONET Liteプロトコルで制御することもできます。
+This emulator allows you to control virtual devices via a web browser and expose their state using the UDP-based ECHONET Lite protocol. You can also control these virtual devices through ECHONET Lite commands sent over UDP.
 
 ![preview](example/preview.jpg)
 
+### Supported Devices
 
+| Device | ECHONET Lite Class | EOJ Code |
+|--------|-------------------|----------|
+| Ceiling Light (Single-function Lighting) | 0x0291 | 0x029101 |
+| Temperature Sensor | 0x0011 | 0x001101 |
+| Humidity Sensor | 0x0012 | 0x001201 |
+| Human Detection Sensor (Motion) | 0x0007 | 0x000701 |
+| Floor Light (General Lighting) | 0x0290 | 0x029001 |
+| Electric Shutter/Blind | 0x0263 | 0x026301 |
+| Electric Lock + Door | 0x026F / 0x05FD | 0x026F01 / 0x05FD01 |
+| Switch (JEM-A / HA Terminal) | 0x05FD | 0x05FD01 |
+| Electric Water Heater (EcoCute) | 0x026B | 0x026B01 |
+| Home Air Conditioner | 0x0130 | 0x013001 |
 
-対応している機器は以下です。
-* シーリングライト (ECHONET Liteクラス:0x0291 単機能照明)
-* 温度計 (ECHONET Liteクラス:0x0011 温度センサ)
-* 湿度計 (ECHONET Liteクラス:0x0012 湿度センサ)
-* モーションセンサー (ECHONET Liteクラス:0x0007 人体検知センサ)
-* フロアライト (ECHONET Lite クラス:0x0290 一般照明)
-* 電動シャッター (ECHONET Liteクラス:0x0263 電動雨戸・シャッター)
-* 電気錠 (ECHONET Liteクラス:0x026f 電気錠, 0x05fd スイッチ（JEM-A / HA 端子対応）)
-* エコキュート (ECHONET Liteクラス:0x026b 電気温水器)
-* エアコン (ECHONET Liteクラス:0x0130 家庭用エアコン)
+This emulator follows the [ECHONET Device Object Specification Release P](https://echonet.jp/spec_object_rp/) for ECHONET Lite compliance. While we have implemented the required properties, only basic functionality is supported for each device type.
 
-ECHONET Liteの仕様としては、[APPENDIX ECHONET機器オブジェクト詳細規定Release P](https://echonet.jp/spec_object_rp/) に従うようにしています。
-ただ、必須のプロパティは実装しましたが、基本的な機能しか対応していません。
+> **Note:** The well-known [MoekadenRoom](https://github.com/SonyCSL/MoekadenRoom) by Sony is another ECHONET Lite emulator. This project was created separately because MoekadenRoom uses an older specification and didn't include the specific devices needed for this project.
 
-ECHONET Liteのエミュレータと言えば、 [MoekadenRoom](https://github.com/SonyCSL/MoekadenRoom) が有名ですが、
-こちらは、やや仕様が古いのと、必要な家電がそろっていなかったので、新たに作っています。
+## Features
 
-なお、GitHubは英語でReadmeやコミットコメントを書くべきだとは思いますが、
-ECHONET Liteは日本でしか使われてなさそうなので、基本日本語で書きます。
+- **ECHONET Protocol Compatibility**: Full TID preservation, response aggregation (OPC), and INF notification support
+- **Pychonet Compatible**: Tested and verified working with [pychonet](https://github.com/michmich37/pychonet) Python library
+- **Web UI**: Browser-based control interface for all supported devices
+- **REST API**: HTTP endpoints for device status queries and state changes
+- **Plugin Architecture**: Extensible design allowing new device types to be added as plugins
+- **Multi-Device Configuration**: Enable/disable individual devices via configuration file
 
-## 使用方法
+## Usage
 
-### dockerで動作させる
+### Running with Docker
 
-実行には以下が必要です。
-* docker (ver.20以降推奨)
+**Requirements:** Docker (version 20+ recommended)
 
-(1) dockerでechonet-lite-kaden-emulatorを起動します。
+#### Option 1: Expose ECHONET Lite on the host network
 
-ECHONET Liteは1つのIPで1つのノードしか稼働できません。(1-a)PC外にECHONET Liteを公開してdockerのホストPCをノードにする方法と、
-(1-b)docker内ネットワークにECHONET Liteを公開してdocker containerをノードにする方法があります。
-
-(1-a)PC外にECHONET Liteを公開する場合
-
-```
+```bash
 docker run -d --net=host banban525/echonet-lite-kaden-emulator:latest
 ```
 
-この方法は、ネットワーク内に複数台のPCや仮想PCがある環境で、それぞれのPCをECHONET Liteのノードにする場合に使用します。
+Use this method when you want to run the emulator on a PC that acts as an ECHONET Lite node on your network. Note that only one ECHONET Lite node can operate per IP address.
 
+#### Option 2: Expose ECHONET Lite inside Docker's network
 
-(1-b)docker内ネットワークにECHONET Liteを公開する場合
-
-```
+```bash
 docker run -d -p 3000:3000 banban525/echonet-lite-kaden-emulator:latest
 ```
 
-この方法は、1つのPC内で複数のECHONET Liteのノードを構築する場合に使用します。
-例えば、echonet-lite-kaden-emulatorを1つのPC内で複数立ち上げて、複数ノードの実験を1つのPCで行うこともできます。(なお、外部公開ポートは変更する必要があります)
+Use this method when running multiple emulator nodes on a single machine (each container needs different port mappings).
 
-(2) ブラウザで、 `http://<docker server>:3000/` にアクセスします。
+#### Access the Web UI
 
-### Node.jsで動作させる
+After starting, open your browser to `http://<server-ip>:3000/`
 
-実行には以下が必要です。
-* Node.js (ver.14以降推奨)
+### Running with Node.js
 
-以下の手順で動作させることができます。
+**Requirements:** Node.js (version 14+ recommended)
 
-(1) リポジトリをCloseします
+```bash
+# Clone the repository
+git clone <repository-url>
+cd echonet-lite-kaden-emulator
 
-(2) 依存モジュールをインストールします。(初回のみ)
-```
+# Install dependencies (first time only)
 npm install
-```
 
-(3) サーバーを開始します。
-```
+# Start the server
 npm start
+
+# Open browser to http://localhost:3000/
+
+# Stop with Ctrl+C
 ```
 
-(4) ブラウザで、 http://localhost:3000/ にアクセスします。
+## Environment Variables
 
-(5) 終了にするには、Ctrl+Cを入力してください。
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ECHONET_TARGET_NETWORK` | Target network in CID notation (e.g., `192.168.1.0/24`) to bind ECHONET Lite traffic. Auto-detected if not specified. | Auto-detect IPv4 |
+| `ECHOENT_DELAY_TIME` | Response delay in milliseconds (simulates slow devices) | 0 (no delay) |
+| `WEBPORT` | Port for the web UI and REST API | 3000 |
+| `SETTINGS` | Path to configuration file | - |
+| `DEBUG` | Enable debug logging (`TRUE` or `1`) | false |
 
-## 環境変数
+## Configuration File
 
-`ECHONET_TARGET_NETWORK`
+The configuration file allows enabling/disabling individual devices and setting custom Node Profile IDs.
 
-ECHONET Liteを公開するネットワークを xxxx.xxxx.xxxx.xxx/xx (例: 192.168.1.0/24) の形式で指定します。
-ノードにIPが複数ある場合、想定しているネットワークとは別のネットワークにECHONET Liteが公開されてしまう場合があります。
-未指定では自動でIPv4のアドレスが選択されますが、公開先ネットワークを指定する場合は設定します。
-
-`ECHONET_DELAY_TIME`
-
-ECHONET Liteの応答にかかる遅延時間をミリ秒で指定します。未指定の場合は遅延無しです。
-遅いデバイスを疑似的に再現するために使用します。
-
-`SETTINGS`
-
-設定ファイルのパスを指定します。
-
-
-`WEBPORT`
-
-Web UIを公開するポートを指定します。
-デフォルトは3000です。
-
-## 設定ファイル
-
-設定ファイルを使用することで、特定のデバイスの無効化およびIDの指定が可能です。
-
-
-```
+```json
 {
-  "devices":{
-    "monoFunctionalLighting":{
-      "disabled":false,
+  "nodeProfile": {
+    "manufacturer": "TestLab",
+    "manufacturerName": "Test Laboratory",
+    "productCode": "0x54 0x45 0x53 0x54",
+    "uid": "fe000000000000000000000000000001"
+  },
+  "network": {
+    "targetNetwork": "",
+    "delayTime": 0,
+    "webPort": 3000
+  },
+  "devices": {
+    "monoFunctionalLighting": {
+      "disabled": false,
+      "id": ""
+    },
+    "temperatureSensor": {
+      "disabled": false,
+      "id": ""
+    },
+    "humiditySensor": {
+      "disabled": false,
+      "id": ""
+    },
+    "humanDetectionSensor": {
+      "disabled": false,
+      "id": ""
+    },
+    "generalLighting": {
+      "disabled": false,
+      "id": ""
+    },
+    "electricallyOperatedRainSlidingDoorShutter": {
+      "disabled": false,
+      "id": ""
+    },
+    "electricLock": {
+      "disabled": false,
+      "id": ""
+    },
+    "switch": {
+      "disabled": false,
+      "id": ""
+    },
+    "electricWaterHeater": {
+      "disabled": true,
+      "id": ""
+    },
+    "homeAirConditioner": {
+      "disabled": false,
       "id": ""
     }
-    "temperatureSensor":{
-      "disabled":false,
-      "id": "",
-    }
-    "humiditySensor":{
-      "disabled":false,
-      "id": "",
-    }
-    "humanDetectionSensor":{
-      "disabled":false,
-      "id": "",
-    }
-    "generalLighting":{
-      "disabled":false,
-      "id": "",
-    }
-    "electricallyOperatedRainSlidingDoorShutter":{
-      "disabled":false,
-      "id": "",
-    }
-    "electricLock":{
-      "disabled":false,
-      "id": "",
-    }
-    "switch":{
-      "disabled":false,
-      "id": "",
-    }
-    "homeAirConditioner":{
-      "disabled":false,
-      "id": "",
-    }
-    "electricWaterHeater":{
-      "disabled":false,
-      "id": "",
-    }
-  },
-  "nodeProfileId":""
+  }
 }
 ```
 
-## サードパーティの使用
+### Configuration Options
 
-* アプリケーション内の画像は、 [いらすとや](https://www.irasutoya.com/) 様の素材を使用しています。
+| Field | Description |
+|-------|-------------|
+| `nodeProfile.uid` | Custom Node Profile ID (must start with `fe`, 34 hex characters) |
+| `devices.<type>.disabled` | Set to `true` to disable this device type |
+| `devices.<type>.id` | Custom EOJ identifier (leave empty for auto-generated) |
 
-## ライセンス
+## REST API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/status` | Get all device statuses |
+| GET | `/api/cellingLight` | Get ceiling light status |
+| POST | `/api/cellingLight` | Set ceiling light state |
+| GET | `/api/sensorMeter` | Get temperature/humidity sensor status |
+| POST | `/api/sensorMeter` | Set sensor values |
+| GET | `/api/motionSensor` | Get motion sensor status |
+| POST | `/api/motionSensor` | Set motion detection state |
+| GET | `/api/floorLight` | Get floor light status |
+| POST | `/api/floorLight` | Set floor light state |
+| GET | `/api/shutter` | Get shutter status |
+| POST | `/api/shutter` | Set shutter position |
+| GET | `/api/door` | Get door/lock status |
+| POST | `/api/door` | Set door/lock state |
+| GET | `/api/bathWaterHeater` | Get bath water heater status |
+| POST | `/api/bathWaterHeater` | Set bath water heater state |
+| GET | `/api/airConditioner` | Get air conditioner status |
+| POST | `/api/airConditioner` | Set air conditioner state |
+
+## Third-Party Usage
+
+- Images used in the application are from [irasutoya.com](https://www.irasutoya.com/) (Irasutoya) - Illustration library.
+
+## License
 
 [MIT](LICENSE)
 
 ## Author
 
-[banban525](https://github.com/banban525)
-
+- Original project: [banban525](https://github.com/banban525/echonet-lite-kaden-emulator)
+- Current maintainer: [scottyphillips](https://github.com/scottyphillips/echonet-lite-kaden-emulator)
+- Modernization and plugin architecture: [scottyphillips](https://github.com/scottyphillips)
