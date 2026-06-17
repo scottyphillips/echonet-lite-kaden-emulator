@@ -693,7 +693,8 @@ async function userFunc(rinfo: rinfo, els: eldata): Promise<void> {
   }
 
   // GET - respond with same TID as request (use buffering for multiple EPCs)
-  if (els.ESV === EL.GET) {
+  // Skip Node Profile (0xEF01) requests - the echonet-lite library handles those directly
+  if (els.ESV === EL.GET && els.DEOJ !== "0ef001") {
     const key: GetResBufferKey = `${rinfo.address}|${els.SEOJ}`;
     requesterEojByBufferKey.set(key, els.SEOJ); // Store the actual requester EOJ
 
