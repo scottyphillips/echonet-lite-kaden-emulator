@@ -712,6 +712,7 @@ async function userFunc(rinfo: rinfo, els: eldata): Promise<void> {
 
     for (const propertyCode in els.DETAILs) {
       // Find the matching device and check if property exists
+      let found = false;
       for (const status of matchedEchoObjects) {
         if (propertyCode in status.echoObject[els.DEOJ]) {
           const value = status.echoObject[els.DEOJ][propertyCode];
@@ -725,8 +726,19 @@ async function userFunc(rinfo: rinfo, els: eldata): Promise<void> {
             getResBuffers.set(key, buf);
           }
           buf.push({ esv: parseInt(EL.GET_RES, 16), epc: propertyCode, edt: value, seoj: status.eoj });
+          found = true;
           break; // Property found in this device, move to next EPC
         }
+      }
+      if (!found) {
+        // No matching property found - send null GET_RES with empty EDT (PDC=0)
+        // This acknowledges the EPC exists but has no data, preventing client timeouts
+        let buf = getResBuffers.get(key);
+        if (!buf) {
+          buf = [];
+          getResBuffers.set(key, buf);
+        }
+        buf.push({ esv: parseInt(EL.GET_RES, 16), epc: propertyCode, edt: [] });
       }
     }
 
