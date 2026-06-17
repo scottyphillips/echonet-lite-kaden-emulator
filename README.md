@@ -48,9 +48,9 @@ The web interface features a professional, card-based dashboard layout:
 - **Interactive Device Controls**: Mode selectors, temperature sliders, toggle switches, and action buttons
 - **Connection Status Indicator**: Visual feedback for server connectivity
 - **Responsive Design**: Works on desktop and mobile browsers
-- **Device Management**: Per-device enable/disable toggles
+- **Device Management**: Inline device toggles on each card disable/enable the ECHONET Lite instance. A consolidated "Manage Devices" modal is available via the Actions dropdown menu
 
-### Supported Devices
+### Device Controls
 
 | Device | Controls |
 |--------|----------|
