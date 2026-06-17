@@ -299,7 +299,7 @@ function patchSendBase(): void {
 
         const flushTimer = setTimeout(() => {
           flushGetResBuffer(key);
-        }, 200); // 200ms delay to collect all responses from the same GET request
+        }, 40); // 40ms delay to collect all responses from the same GET request
 
         getResTimers.set(key, flushTimer);
 
