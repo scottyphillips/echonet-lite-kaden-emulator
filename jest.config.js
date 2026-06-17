@@ -6,7 +6,6 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   collectCoverageFrom: [
     'server/**/*.ts',
-    'plugins/**/*.ts',
     '!**/node_modules/**',
   ],
   coverageDirectory: 'coverage',

@@ -36,7 +36,6 @@ This emulator follows the [ECHONET Device Object Specification Release P](https:
 - **ECHONET Protocol Compatibility**: Full TID preservation, response aggregation (OPC), and INF notification support
 - **Pychonet Compatible**: Tested and verified working with [pychonet](https://github.com/michmich37/pychonet) Python library
 - **REST API**: HTTP endpoints for device status queries and state changes
-- **Plugin Architecture**: Extensible design allowing new device types to be added as plugins
 - **Multi-Device Configuration**: Enable/disable individual devices via configuration file
 
 ## Web Interface

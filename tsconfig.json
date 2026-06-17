@@ -1,6 +1,7 @@
 {
-  "ts-node": {  "files": true }, // add this
-
+  "ts-node": {
+    "files": true
+  },
   "compilerOptions": {
     "lib": [
       "es2020"
@@ -19,10 +20,11 @@
     "inlineSources": true,
     "declaration": false,
     "noEmit": false,
+    "rootDir": "./server",
     "outDir": "./.ts-node"
   },
   "include": [
-    ".",
-    "server/typings"
+    "server/**/*.ts",
+    "server/typings/**/*.d.ts"
   ]
 }
