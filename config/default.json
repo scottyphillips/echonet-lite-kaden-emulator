@@ -44,7 +44,7 @@
       "id": ""
     },
     "electricWaterHeater": {
-      "disabled": true,
+      "disabled": false,
       "id": ""
     },
     "homeAirConditioner": {
