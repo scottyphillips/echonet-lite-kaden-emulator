@@ -13,11 +13,11 @@ export class DoorDevice {
   private _status: DoorStatus = { state: "closed", lockState: "unlocked" };
   private _echoObject: EchoObject = {
     "026f01": {
-      80: [0x30], // 動作状態
-      e0: [0x42], // 施錠設定１  施錠＝0x41，解錠＝0x42
-      e3: [0x42], // 扉開閉状態	開＝0x41，閉＝0x42
-      "9d": [0x03, 0x80, 0xe0, 0xe3], // 状変アナウンスプロパティマップ
-      "9e": [0x02, 0x80, 0xe0], // Setプロパティマップ
+      80: [0x30], // Operation status
+      e0: [0x42], // Lock setting 1: locked=0x41, unlocked=0x42
+      e3: [0x42], // Door open/close state: open=0x41, closed=0x42
+      "9d": [0x03, 0x80, 0xe0, 0xe3], // Status change announcement property map
+      "9e": [0x02, 0x80, 0xe0], // Set property map
     },
   };
   private _echoStatus: EchoStatus;
@@ -92,7 +92,7 @@ export class DoorDevice {
 
 /**
  * Switch device that mirrors the door's lock state.
- * EOJ: 05fd01 (スイッチクラス JEM-A / HA 端子対応)
+ * EOJ: 05fd01 (Switch Class JEM-A / HA Terminal Compatible)
  */
 export class SwitchDevice {
   readonly eoj = "05fd01";
@@ -100,9 +100,9 @@ export class SwitchDevice {
   
   private _echoObject: EchoObject = {
     "05fd01": {
-      80: [0x30], // 動作状態
-      "9d": [0x02, 0x80], // 状変アナウンスプロパティマップ
-      "9e": [0x01, 0x80], // Setプロパティマップ
+      80: [0x30], // Operation status
+      "9d": [0x02, 0x80], // Status change announcement property map
+      "9e": [0x01, 0x80], // Set property map
     },
   };
   private _echoStatus: EchoStatus;

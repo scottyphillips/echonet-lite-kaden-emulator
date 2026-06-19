@@ -3,7 +3,7 @@ import { createEchoStatus, setCommonProperties } from "./baseDevice";
 
 export interface ShutterStatus {
   state: "opened" | "opening" | "halfOpen" | "closing" | "closed";
-  position: number; // 0:全閉、100:全開
+  position: number; // 0:fully closed, 100:fully open
   move: "opening" | "stopped" | "closing";
 }
 
@@ -14,11 +14,11 @@ export class ShutterDevice {
   private _status: ShutterStatus = { state: "opened", position: 100, move: "stopped" };
   private _echoObject: EchoObject = {
     "026301": {
-      80: [0x30], // 動作状態
-      e0: [0x43], // 開閉動作設定 開＝0x41，閉＝0x42、停止＝0x43
-      ea: [0x41], // 開閉状態 全開=0x41，全閉＝0x42，開動作中＝0x43，閉動作中＝0x44，途中停止＝0x45
-      "9d": [0x04, 0x80, 0xe0, 0xea], // 状変アナウンスプロパティマップ
-      "9e": [0x02, 0xe0], // Setプロパティマップ
+      80: [0x30], // Operation status
+      e0: [0x43], // Open/close setting: open=0x41, close=0x42, stop=0x43
+      ea: [0x41], // Open/close state: fully open=0x41, fully closed=0x42, opening=0x43, closing=0x44, partially stopped=0x45
+      "9d": [0x04, 0x80, 0xe0, 0xea], // Status change announcement property map
+      "9e": [0x02, 0xe0], // Set property map
     },
   };
   private _echoStatus: EchoStatus;
@@ -83,8 +83,8 @@ export class ShutterDevice {
         this._status.position = 100;
         this._status.state = "opened";
         this._status.move = "stopped";
-        this._echoObject["026301"]["e0"] = [0x43]; // 停止
-        this._echoObject["026301"]["ea"] = [0x41]; // 全開
+        this._echoObject["026301"]["e0"] = [0x43]; // Stopped
+        this._echoObject["026301"]["ea"] = [0x41]; // Fully open
         this.notifyPropertyChanged("e0");
         this.notifyPropertyChanged("ea");
       }
@@ -95,8 +95,8 @@ export class ShutterDevice {
         this._status.position = 0;
         this._status.state = "closed";
         this._status.move = "stopped";
-        this._echoObject["026301"]["e0"] = [0x43]; // 停止
-        this._echoObject["026301"]["ea"] = [0x42]; // 全閉
+        this._echoObject["026301"]["e0"] = [0x43]; // Stopped
+        this._echoObject["026301"]["ea"] = [0x42]; // Fully closed
         this.notifyPropertyChanged("e0");
         this.notifyPropertyChanged("ea");
       }
@@ -108,30 +108,30 @@ export class ShutterDevice {
       if (this._status.position < 100 && this._status.move !== "opening") {
         this._status.state = "opening";
         this._status.move = "opening";
-        this._echoObject["026301"]["e0"] = [0x41]; // 開
-        this._echoObject["026301"]["ea"] = [0x43]; // 開動作中
+        this._echoObject["026301"]["e0"] = [0x41]; // Opening
+        this._echoObject["026301"]["ea"] = [0x43]; // Opening state
       }
     } else if (move === "closing") {
       if (this._status.position > 0 && this._status.move !== "closing") {
         this._status.state = "closing";
         this._status.move = "closing";
-        this._echoObject["026301"]["e0"] = [0x42]; // 閉
-        this._echoObject["026301"]["ea"] = [0x44]; // 閉動作中
+        this._echoObject["026301"]["e0"] = [0x42]; // Closing
+        this._echoObject["026301"]["ea"] = [0x44]; // Closing state
       }
     } else if (move === "stopped") {
       if (this._status.move !== "stopped") {
         this._status.move = "stopped";
-        this._echoObject["026301"]["e0"] = [0x43]; // 停止
+        this._echoObject["026301"]["e0"] = [0x43]; // Stopped
 
         if (this._status.position === 100) {
           this._status.state = "opened";
-          this._echoObject["026301"]["ea"] = [0x41]; // 全開
+          this._echoObject["026301"]["ea"] = [0x41]; // Fully open
         } else if (this._status.position === 0) {
           this._status.state = "closed";
-          this._echoObject["026301"]["ea"] = [0x42]; // 全閉
+          this._echoObject["026301"]["ea"] = [0x42]; // Fully closed
         } else {
           this._status.state = "halfOpen";
-          this._echoObject["026301"]["ea"] = [0x45]; // 途中停止
+          this._echoObject["026301"]["ea"] = [0x45]; // Partially stopped
         }
       }
     }

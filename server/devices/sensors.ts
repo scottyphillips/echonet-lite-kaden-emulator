@@ -15,8 +15,8 @@ export class TemperatureSensorDevice {
     "001101": {
       "80": [0x30],
       e0: [0x00, 0xc8],
-      "9d": [0x02, 0xe0], // 状変アナウンスプロパティマップ
-      "9e": [0x01, 0xe0], // Setプロパティマップ
+      "9d": [0x02, 0xe0], // Status change announcement property map
+      "9e": [0x01, 0xe0], // Set property map
     },
   };
   private _echoStatus: EchoStatus;
@@ -100,8 +100,8 @@ export class HumiditySensorDevice {
     "001201": {
       "80": [0x30],
       e0: [50],
-      "9d": [0x02, 0xe0], // 状変アナウンスプロパティマップ
-      "9e": [0x01, 0xe0], // Setプロパティマップ
+      "9d": [0x02, 0xe0], // Status change announcement property map
+      "9e": [0x01, 0xe0], // Set property map
     },
   };
   private _echoStatus: EchoStatus;

@@ -18,8 +18,8 @@ export class CeilingLightDevice implements IBaseDevice {
       {
         "029101": {
           "80": [0x30],
-          "9d": [0x01, 0x80], // 状変アナウンスプロパティマップ
-          "9e": [0x01, 0x80], // Setプロパティマップ
+          "9d": [0x01, 0x80], // Status change announcement property map
+          "9e": [0x01, 0x80], // Set property map
         },
       },
       this.enabled

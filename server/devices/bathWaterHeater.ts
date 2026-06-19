@@ -5,7 +5,7 @@ export interface BathWaterHeaterStatus {
   state: "empty" | "supply" | "drainage" | "full";
   auto: "off" | "on";
   temp: number;
-  waterLevel: number; // 0:空、100:Full
+  waterLevel: number; // 0:empty, 100:full
 }
 
 export class BathWaterHeaterDevice {
@@ -20,25 +20,25 @@ export class BathWaterHeaterDevice {
   };
   private _echoObject: EchoObject = {
     "026b01": {
-      80: [0x30], //   動作状態	0x80	0x30
-      b0: [0x41], //   沸き上げ自動設定	0xB0	自動沸き上げ＝0x41
-      b2: [0x40], //   沸き上げ中状態	0xB2	沸き上げ中＝0x41
-      c0: [0x42], //   昼間沸き増し許可設定	0xC0	昼間沸き増し禁止＝0x42
-      c3: [0x42], //   給湯中状態	0xC3	非給湯中=0x42	(湯はりは除く)
-      e3: [0x42], //   風呂自動モード設定	0xE3	自動入＝0x41，自動解除＝0x42
-      c7: [0x00], //   エネルギーシフト参加状態	0xC7	不参加	0x00
-      c8: [0x14], //   沸き上げ開始基準時刻	0xC8	20 時 0x14
-      c9: [0x01], //   エネルギーシフト回数	0xC9	1 回 0x01
-      ca: [0x00], //   昼間沸き上げシフト時刻１	0xCA	0x00：クリア状態
-      cb: Array.from(new Array(32)).map(() => 0x00), //   昼間沸き上げシフト時刻１での沸き上げ予測電力量
-      cc: Array.from(new Array(32)).map(() => 0x00), //   時間当たり消費電力量 1
-      cd: [0x00], //   昼間沸き上げシフト時刻 2	0xCD	0x00
-      ce: Array.from(new Array(24)).map(() => 0x00), //   昼間沸き上げシフト時刻２での沸き上げ予測電力量
-      cf: Array.from(new Array(12)).map(() => 0x00), //   時間当たり消費電力量 2	0xCF	0x0000
-      d3: [41], // 風呂温度設定値	0xD3	0x00～0x64 (0～100℃)
-      ea: [0x42], // 風呂動作状態監視	0xEA	湯張り中=0x41、保温中=0x43、停止中=0x42
-      "9d": [0x07, 0x80, 0xb0, 0xb2, 0xc3, 0xd3, 0xea], // 状変アナウンスプロパティマップ
-      "9e": [0x04, 0x80, 0xb0, 0xd3, 0xe3], // Setプロパティマップ
+      80: [0x30], // Operation status (0x80): 0x30
+      b0: [0x41], // Auto boil setting (0xB0): auto boil=0x41
+      b2: [0x40], // Boiling state (0xB2): boiling=0x41
+      c0: [0x42], // Daytime refill permission (0xC0): prohibited=0x42
+      c3: [0x42], // Hot water supply state (0xC3): not supplying=0x42
+      e3: [0x42], // Bath auto mode (0xE3): on=0x41, off=0x42
+      c7: [0x00], // Energy shift participation (0xC7): not participating=0x00
+      c8: [0x14], // Boil start time (0xC8): 20:00 = 0x14
+      c9: [0x01], // Energy shift count (0xC9): 1 time=0x01
+      ca: [0x00], // Daytime shift time 1 (0xCA): clear=0x00
+      cb: Array.from(new Array(32)).map(() => 0x00), // Predicted energy at shift time 1
+      cc: Array.from(new Array(32)).map(() => 0x00), // Hourly power consumption 1
+      cd: [0x00], // Daytime shift time 2 (0xCD): clear=0x00
+      ce: Array.from(new Array(24)).map(() => 0x00), // Predicted energy at shift time 2
+      cf: Array.from(new Array(12)).map(() => 0x00), // Hourly power consumption 2 (0xCF)
+      d3: [41], // Bath temperature setting (0xD3): 0-100°C
+      ea: [0x42], // Bath operation (0xEA): filling=0x41, keeping heat=0x43, stopped=0x42
+      "9d": [0x07, 0x80, 0xb0, 0xb2, 0xc3, 0xd3, 0xea], // Status change announcement property map
+      "9e": [0x04, 0x80, 0xb0, 0xd3, 0xe3], // Set property map
     },
   };
   private _echoStatus: EchoStatus;
@@ -95,7 +95,7 @@ export class BathWaterHeaterDevice {
       this.setStatus(newStatus);
       return true;
     } else if (propertyCodeText === "e3") {
-      //   風呂自動モード設定	0xE3	自動入＝0x41，自動解除＝0x42
+      // Bath auto mode (0xE3): on=0x41, off=0x42
       newStatus.auto = newValue[0] === 0x41 ? "on" : "off";
       this.setStatus(newStatus);
       return true;
@@ -106,6 +106,7 @@ export class BathWaterHeaterDevice {
   /**
    * Tick function for timer-based water level changes.
    * Called periodically when auto mode is active.
+   * Simulates water filling/draining based on auto mode state.
    */
   tick(): void {
     if (this._status.auto === "on" && this._status.waterLevel < 100) {
@@ -113,11 +114,11 @@ export class BathWaterHeaterDevice {
       if (this._status.waterLevel >= 100) {
         this._status.waterLevel = 100;
         this._status.state = "full";
-        this._echoObject["026b01"]["ea"] = [0x43]; // 保温中=0x43
+        this._echoObject["026b01"]["ea"] = [0x43]; // Keeping heat=0x43
         this.notifyPropertyChanged("ea");
       } else {
         this._status.state = "supply";
-        this._echoObject["026b01"]["ea"] = [0x41]; // 湯張り中=0x41
+        this._echoObject["026b01"]["ea"] = [0x41]; // Filling=0x41
         this.notifyPropertyChanged("ea");
       }
     } else if (this._status.auto === "off" && this._status.waterLevel > 0) {
@@ -125,11 +126,11 @@ export class BathWaterHeaterDevice {
       if (this._status.waterLevel <= 0) {
         this._status.waterLevel = 0;
         this._status.state = "empty";
-        this._echoObject["026b01"]["ea"] = [0x42]; // 停止中=0x42
+        this._echoObject["026b01"]["ea"] = [0x42]; // Stopped=0x42
         this.notifyPropertyChanged("ea");
       } else {
         this._status.state = "drainage";
-        this._echoObject["026b01"]["ea"] = [0x42]; // 停止中=0x42
+        this._echoObject["026b01"]["ea"] = [0x42]; // Stopped=0x42
         this.notifyPropertyChanged("ea");
       }
     }
@@ -139,29 +140,29 @@ export class BathWaterHeaterDevice {
     if (this._status.auto !== auto) {
       this._status.auto = auto;
       if (auto === "on") {
-        this._echoObject["026b01"]["e3"] = [0x41]; // 自動入＝0x41
+        this._echoObject["026b01"]["e3"] = [0x41]; // Auto on=0x41
         this.notifyPropertyChanged("e3");
 
         if (this._status.waterLevel < 100) {
           this._status.state = "supply";
-          this._echoObject["026b01"]["ea"] = [0x41]; // 湯張り中=0x41
+          this._echoObject["026b01"]["ea"] = [0x41]; // Filling=0x41
           this.notifyPropertyChanged("ea");
         } else if (this._status.waterLevel === 100) {
           this._status.state = "full";
-          this._echoObject["026b01"]["ea"] = [0x43]; // 保温中=0x43
+          this._echoObject["026b01"]["ea"] = [0x43]; // Keeping heat=0x43
           this.notifyPropertyChanged("ea");
         }
       } else {
-        this._echoObject["026b01"]["e3"] = [0x42]; // 自動解除＝0x42
+        this._echoObject["026b01"]["e3"] = [0x42]; // Auto off=0x42
         this.notifyPropertyChanged("e3");
 
         if (this._status.waterLevel > 0) {
           this._status.state = "drainage";
-          this._echoObject["026b01"]["ea"] = [0x42]; // 停止中=0x42
+          this._echoObject["026b01"]["ea"] = [0x42]; // Stopped=0x42
           this.notifyPropertyChanged("ea");
         } else if (this._status.waterLevel === 0) {
           this._status.state = "empty";
-          this._echoObject["026b01"]["ea"] = [0x42]; // 停止中=0x42
+          this._echoObject["026b01"]["ea"] = [0x42]; // Stopped=0x42
           this.notifyPropertyChanged("ea");
         }
       }

@@ -50,11 +50,11 @@ export function createEchoStatus(
  */
 export function setCommonProperties(echoObject: EchoObject, id: string = ""): void {
   for (const key in echoObject) {
-    echoObject[key]["80"] ??= [0x30]; // 動作状態 (preserve if already set)
-    echoObject[key]["81"] = [0x00]; // 設置場所
-    echoObject[key]["82"] = [0x00, 0x00, 0x50, 0x01]; // 規格 Version 情報
-    echoObject[key]["88"] = [0x42]; // 異常発生状態
-    echoObject[key]["8a"] = [0xff, 0xff, 0xff]; // メーカーコード
+    echoObject[key]["80"] ??= [0x30]; // Operation status (preserve if already set)
+    echoObject[key]["81"] = [0x00]; // Installation location
+    echoObject[key]["82"] = [0x00, 0x00, 0x50, 0x01]; // Specification version info
+    echoObject[key]["88"] = [0x42]; // Abnormal state
+    echoObject[key]["8a"] = [0xff, 0xff, 0xff]; // Manufacturer code
 
     if (id !== "") {
       // Import EL at runtime to avoid circular dependency issues
@@ -69,7 +69,7 @@ export function setCommonProperties(echoObject: EchoObject, id: string = ""): vo
         getProperties.push(parseInt(propertyNo, 16));
       }
     }
-    getProperties.push(0x9f); // Getプロパティマップ
+    getProperties.push(0x9f); // Get property map
 
     getProperties[0] = getProperties.length - 1;
     if (getProperties.length <= 16) {

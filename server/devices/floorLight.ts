@@ -13,10 +13,10 @@ export class FloorLightDevice {
   private _status: FloorLightStatus = { state: "on", color: "lamp" };
   private _echoObject: EchoObject = {
     "029001": {
-      80: [0x30], // 光色設定 ＯＮ＝0x30，ＯＦＦ＝0x31
-      b1: [0x41], // 光色設定 電球色＝ 0x41, 白色＝ 0x42, 昼白色＝0x43
-      "9d": [0x02, 0x80, 0xb1], // 状変アナウンスプロパティマップ
-      "9e": [0x03, 0x80, 0xb1], // Setプロパティマップ
+      80: [0x30], // Operation status: ON=0x30, OFF=0x31
+      b1: [0x41], // Light color: warm=0x41, white=0x42, neutral white=0x43
+      "9d": [0x02, 0x80, 0xb1], // Status change announcement property map
+      "9e": [0x03, 0x80, 0xb1], // Set property map
     },
   };
   private _echoStatus: EchoStatus;
