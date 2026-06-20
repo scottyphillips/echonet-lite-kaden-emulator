@@ -15,7 +15,7 @@ export class MotionSensorDevice {
       "80": [0x30],
       b1: [0x41],
       "9d": [0x02, 0xb1], // Status change announcement property map
-      "9e": [0x01, 0xb1], // Set property map
+      "9e": [0x01], // Set property map
     },
   };
   private _echoStatus: EchoStatus;
