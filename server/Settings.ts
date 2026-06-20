@@ -41,6 +41,10 @@ export interface Settings {
       disabled?:boolean;
       id?: string;
     };
+    distributionPanelMeter?:{
+      disabled?:boolean;
+      id?: string;
+    };
   }
   nodeProfileId?:string;
 }
