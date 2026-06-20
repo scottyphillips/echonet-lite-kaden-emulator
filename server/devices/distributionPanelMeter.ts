@@ -43,6 +43,9 @@ export class DistributionPanelMeterDevice implements IBaseDevice {
       99: [0x17, 0xA0],
       // Cumulative operating time (5 bytes: unit + 4 bytes value) - hours
       "9a": [0x02, 0x00, 0x03, 0xA1, 0xF8],
+      //
+      "9d": [0x01, 0x80], // Status change announcement property map
+      "9e": [0x01, 0x80], // Set property map
     },
   };
 
