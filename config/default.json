@@ -12,43 +12,43 @@
   },
   "devices": {
     "monoFunctionalLighting": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "temperatureSensor": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "humiditySensor": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "humanDetectionSensor": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "generalLighting": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "electricallyOperatedRainSlidingDoorShutter": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "electricLock": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "switch": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "electricWaterHeater": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     },
     "homeAirConditioner": {
-      "disabled": false,
+      "disabled": true,
       "id": ""
     }
   }
