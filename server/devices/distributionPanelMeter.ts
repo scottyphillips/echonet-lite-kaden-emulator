@@ -38,11 +38,11 @@ export class DistributionPanelMeterDevice implements IBaseDevice {
       // Fault description (single byte) - No fault
       89: [0x00],
       // Power-saving operation setting - Normal Operation
-      "8F": [0x42],
+      "8f": [0x42],
       // Power limit setting (uint16, unit: W) - 6000W
       99: [0x17, 0xA0],
       // Cumulative operating time (5 bytes: unit + 4 bytes value) - hours
-      "9A": [0x02, 0x00, 0x03, 0xA1, 0xF8],
+      "9a": [0x02, 0x00, 0x03, 0xA1, 0xF8],
     },
   };
 
