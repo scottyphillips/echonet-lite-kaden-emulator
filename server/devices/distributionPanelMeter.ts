@@ -15,9 +15,9 @@ export class DistributionPanelMeterDevice implements IBaseDevice {
   } = {
     operationStatus: "on",
     faultStatus: "noFault",
-    instantaneousPowerConsumption: 0,
-    cumulativeElectricEnergy: 0,
-    currentLimit: 100,
+    instantaneousPowerConsumption: 2342,
+    cumulativeElectricEnergy: 15432,
+    currentLimit: 80,
   };
   private _echoStatus: EchoStatus;
   private onPropertyChanged?: (echoStatus: EchoStatus, eoj: string, propertyNo: string, newValue: number[]) => void;
@@ -32,14 +32,26 @@ export class DistributionPanelMeterDevice implements IBaseDevice {
       "81": [0x00],        // Installation location
       "88": [0x42],        // Fault status (0x41=Fault, 0x42=No fault)
       
-      // Example: Measured instantaneous power consumption (uint16, unit: W)
-      "84": [0x00, 0x00],  // 0 W
+      // Measured instantaneous power consumption (uint16, unit: W) - 2342W
+      "84": [0x09, 0x26],  // 0x0926 = 2342 W
       
-      // Example: Measured cumulative electric energy consumption (uint32, unit: 0.001 kWh)
-      "85": [0x00, 0x00, 0x00, 0x00],  // 0 kWh
+      // Measured cumulative electric energy consumption (uint32, unit: 0.001 kWh) - 15.432 kWh
+      "85": [0x00, 0x00, 0x3C, 0x18],  // 0x00003C18 = 15432 * 0.001 = 15.432 kWh
       
-      // Example: Current limit setting (uint8, unit: %)
-      "87": [0x64],        // 100%
+      // Current limit setting (uint8, unit: %) - 80%
+      "87": [0x50],        // 0x50 = 80%
+      
+      // Fault description (single byte) - No fault
+      "89": [0x00],
+      
+      // Power-saving operation setting - Normal Operation
+      "8F": [0x42],
+      
+      // Power limit setting (uint16, unit: W) - 6000W
+      "99": [0x17, 0xA0],  // 0x17A0 = 6000 W
+      
+      // Cumulative operating time (5 bytes: unit + 4 bytes value) - hours
+      "9A": [0x02, 0x00, 0x03, 0xA1, 0xF8],  // unit=0x02(hours), value=250000
     };
 
     this._echoStatus = createEchoStatus(
@@ -189,7 +201,7 @@ export class DistributionPanelMeterDevice implements IBaseDevice {
     if (!this.enabled) return;
     
     const eoj = "05ff01";
-    const properties = ["80", "84", "85", "87", "88"];
+    const properties = ["80", "84", "85", "87", "88", "89", "8F", "99", "9A"];
     for (const prop of properties) {
       this.notifyPropertyChanged(prop);
     }
