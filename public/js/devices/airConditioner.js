@@ -3,7 +3,24 @@
 
 const AirConditioner = {
     state: { state: "off", temp: 20 },
-    debounceTimer: null,
+
+    // Pre-create debounce-wrapped API function (stored once, called repeatedly)
+    _debouncedSendTemp: function() {
+        return BaseDevice.createDebounce(300, async () => {
+            try {
+                const slider = document.getElementById('ac-temp-slider');
+                await fetch("/api/airConditioner", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        state: AirConditioner.state.state, 
+                        temp: parseInt(slider.value) 
+                    })
+                });
+                await App.getStatus();
+            } catch (e) { console.error("AC temp error:", e); }
+        });
+    }(),
 
     async setMode(mode) {
         try {
@@ -20,21 +37,7 @@ const AirConditioner = {
 
     updateTempDisplay() {
         BaseDevice.updateSliderDisplay('ac-temp-slider', 'ac-temp-slider-val', '°C');
-        
-        this.debounceTimer = BaseDevice.createDebounce(300, async () => {
-            try {
-                const slider = document.getElementById('ac-temp-slider');
-                await fetch("/api/airConditioner", {
-                    method: "POST",
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        state: this.state.state, 
-                        temp: parseInt(slider.value) 
-                    })
-                });
-                await App.getStatus();
-            } catch (e) { console.error("AC temp error:", e); }
-        });
+        this._debouncedSendTemp();
     },
 
     updateStatus() {

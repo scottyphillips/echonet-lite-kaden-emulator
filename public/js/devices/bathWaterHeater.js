@@ -3,24 +3,27 @@
 
 const BathWaterHeater = {
     state: { state: "empty", auto: "off", temp: 40, waterLevel: 0, timerRunning: false },
-    debounceTimer: null,
 
-    updateTempDisplay() {
-        BaseDevice.updateSliderDisplay('bath-temp-slider', 'bath-temp-slider-val', '°C');
-        
-        this.debounceTimer = BaseDevice.createDebounce(300, async () => {
+    // Pre-create debounce-wrapped API function (stored once, called repeatedly)
+    _debouncedSendTemp: function() {
+        return BaseDevice.createDebounce(300, async () => {
             try {
                 await fetch("/api/bathWaterHeater", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        auto: this.state.auto, 
+                        auto: BathWaterHeater.state.auto, 
                         temp: parseInt(document.getElementById('bath-temp-slider').value) 
                     })
                 });
                 await App.getStatus();
             } catch (e) { console.error("Bath temp error:", e); }
         });
+    }(),
+
+    updateTempDisplay() {
+        BaseDevice.updateSliderDisplay('bath-temp-slider', 'bath-temp-slider-val', '°C');
+        this._debouncedSendTemp();
     },
 
     async setBathAuto(on) {

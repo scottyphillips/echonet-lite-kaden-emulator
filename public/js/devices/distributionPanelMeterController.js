@@ -9,7 +9,14 @@ const DistributionPanelMeterController = {
         cumulativeElectricEnergy: 0, 
         currentLimit: 100 
     },
-    debounceTimer: null,
+
+    // Pre-create debounce-wrapped API function (stored once, called repeatedly)
+    _debouncedUpdateDpmlLimit: function() {
+        return BaseDevice.createDebounce(300, async () => {
+            const slider = document.getElementById('dpm-limit-slider');
+            await DistributionPanelMeterController.setDpmlLimit(parseInt(slider.value));
+        });
+    }(),
 
     updateDpmlLimitDisplay() {
         BaseDevice.updateSliderDisplay('dpm-limit-slider', 'dpm-limit-slider-val', '%');
@@ -43,10 +50,7 @@ const DistributionPanelMeterController = {
     },
 
     updateDpmlLimit() {
-        const slider = document.getElementById('dpm-limit-slider');
-        this.debounceTimer = BaseDevice.createDebounce(300, async () => {
-            await this.setDpmlLimit(parseInt(slider.value));
-        });
+        this._debouncedUpdateDpmlLimit();
     },
 
     updateStatus() {
