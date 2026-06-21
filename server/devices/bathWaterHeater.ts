@@ -113,9 +113,6 @@ export class BathWaterHeaterDevice {
    * Simulates water draining (20%/sec) when auto mode is OFF and water exists.
    */
   tick(): void {
-    // Debug logging to trace tick execution
-    console.log(`[BathWaterHeater] tick() called: auto=${this._status.auto}, waterLevel=${this._status.waterLevel}, enabled=${this.enabled}`);
-
     // Track whether timer should be running for UI feedback
     this._status.timerRunning = (this._status.auto === "on" && this._status.waterLevel < 100);
 
@@ -157,10 +154,8 @@ export class BathWaterHeaterDevice {
   }
 
   private handleAutoChange(auto: "on" | "off"): void {
-    console.log(`[BathWaterHeater] handleAutoChange called: ${auto}, current=${this._status.auto}, waterLevel=${this._status.waterLevel}`);
     if (this._status.auto !== auto) {
       this._status.auto = auto;
-      console.log(`[BathWaterHeater] Auto mode changed to: ${auto}`);
       
       if (auto === "on") {
         // Auto mode turned ON
