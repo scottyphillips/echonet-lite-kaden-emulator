@@ -526,11 +526,21 @@ export class Controller {
         const getPropertiesPart2 = new Array(17);
         getPropertiesPart2.fill(0x00);
         getPropertiesPart2[0] = getProperties.length - 1;
+        
         for (let i = 1; i < getProperties.length; i++) {
           const propCode = getProperties[i];
-          const byteIndex = Math.floor((propCode - 0x80) / 8) + 1;  // which of the 16 bitmap bytes
-          const bit = (propCode - 0x80) % 8;                         // which bit within that byte
-          getPropertiesPart2[byteIndex] = getPropertiesPart2[byteIndex] | (0x01 << bit);
+          
+          // The lower nibble (0-15) determines the byte. 
+          // We add 1 because index 0 is used for the property count.
+          const byteIndex = (propCode & 0x0F) + 1; 
+          
+          // The upper nibble shifted down (8-15) minus 8 determines the bit (0-7).
+          const bit = ((propCode >> 4) & 0x0F) - 8; 
+          
+          // Ensure we don't accidentally shift out of bounds for weird properties
+          if (bit >= 0 && bit <= 7) {
+            getPropertiesPart2[byteIndex] = getPropertiesPart2[byteIndex] | (0x01 << bit);
+          }
         }
         echoObject[key]["9f"] = getPropertiesPart2;
       }
