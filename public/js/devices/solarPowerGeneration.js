@@ -57,14 +57,15 @@ const SolarPowerGeneration = {
     updateStatus() {
         const state = this.state;
         
+        if (!state) return;
+        
         // Operation status
-        document.getElementById('solar-status-display').textContent = state.operationStatus === "on" ? "ON" : "OFF";
+        const statusEl = document.getElementById('solar-status-display');
+        if (statusEl) statusEl.textContent = state.operationStatus === "on" ? "ON" : "OFF";
         
         // Fault status
-        document.getElementById('solar-fault-display').textContent = state.faultStatus === "noFault" ? "OK" : "FAULT";
-        
-        // Installation location
-        document.getElementById('solar-location-display').textContent = state.installationLocation || "--";
+        const faultEl = document.getElementById('solar-fault-display');
+        if (faultEl) faultEl.textContent = state.faultStatus === "noFault" ? "OK" : "FAULT";
         
         // System interconnection type
         const sysTypeMap = {
@@ -72,7 +73,8 @@ const SolarPowerGeneration = {
             "independentOperation": "Independent",
             "gridConnectionReverseFlowNotAcceptable": "Grid (No Reverse)"
         };
-        document.getElementById('solar-systype-display').textContent = sysTypeMap[state.systemInterconnectionType] || "--";
+        const systypeEl = document.getElementById('solar-systype-display');
+        if (systypeEl) systypeEl.textContent = sysTypeMap[state.systemInterconnectionType] || "--";
         
         // Output power restraint status
         const restraintMap = {
@@ -82,19 +84,24 @@ const SolarPowerGeneration = {
             "notRestraining": "Not Restraining",
             "unknown": "Unknown"
         };
-        document.getElementById('solar-restraint-display').textContent = restraintMap[state.outputPowerRestraintStatus] || "--";
+        const restraintEl = document.getElementById('solar-restraint-display');
+        if (restraintEl) restraintEl.textContent = restraintMap[state.outputPowerRestraintStatus] || "--";
         
         // Instantaneous power generation
-        document.getElementById('solar-power-display').textContent = state.instantaneousElectricPowerGeneration;
+        const powerEl = document.getElementById('solar-power-display');
+        if (powerEl) powerEl.textContent = state.instantaneousElectricPowerGeneration;
         
         // Energy of generation (convert from 0.001kWh to kWh)
-        document.getElementById('solar-energy-gen-display').textContent = (state.cumulativeElectricEnergyOfGeneration / 1000).toFixed(3);
+        const energyGenEl = document.getElementById('solar-energy-gen-display');
+        if (energyGenEl) energyGenEl.textContent = (state.cumulativeElectricEnergyOfGeneration / 1000).toFixed(3);
         
         // Energy sold (convert from 0.001kWh to kWh)
-        document.getElementById('solar-energy-sold-display').textContent = (state.cumulativeElectricEnergySold / 1000).toFixed(3);
+        const energySoldEl = document.getElementById('solar-energy-sold-display');
+        if (energySoldEl) energySoldEl.textContent = (state.cumulativeElectricEnergySold / 1000).toFixed(3);
 
         // Rated power
-        document.getElementById('solar-rated-power-display').textContent = state.ratedElectricPowerOfgeneration;
+        const ratedPowerEl = document.getElementById('solar-rated-power-display');
+        if (ratedPowerEl) ratedPowerEl.textContent = state.ratedElectricPowerOfgeneration;
     },
 
     toggleDevice(enabled) {
