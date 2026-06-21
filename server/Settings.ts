@@ -53,6 +53,10 @@ export interface Settings {
       disabled?:boolean;
       id?: string;
     };
+    powerDistributionBoardMetering?:{
+      disabled?:boolean;
+      id?: string;
+    };
   }
   nodeProfileId?:string;
 }

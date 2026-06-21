@@ -511,6 +511,9 @@ app.post("/api/evChargerDischarger", controller.setEvChargerDischargerStatusFrom
 app.get("/api/solarPowerGeneration", controller.getSolarPowerGenerationStatus);
 app.post("/api/solarPowerGeneration", controller.setSolarPowerGenerationStatusFromRestApi);
 
+app.get("/api/powerDistributionBoardMetering", controller.getPowerDistributionBoardMeteringStatus);
+app.post("/api/powerDistributionBoardMetering", controller.setPowerDistributionBoardMeteringStatusFromRestApi);
+
 app.post("/api/commands/:command", controller.postCommandsFromRestApi);
 
 const server = app.listen(webPort, function () {

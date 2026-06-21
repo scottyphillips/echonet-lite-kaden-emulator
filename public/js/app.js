@@ -21,7 +21,8 @@ const App = {
         { key: 'airConditioner', eoj: '013001', name: 'Air Conditioner' },
         { key: 'distributionPanelMeterController', eoj: '05ff01', name: 'Distribution Panel Meter Controller' },
         { key: 'evChargerDischarger', eoj: '027e01', name: 'EV Charger Discharger' },
-        { key: 'solarPowerGeneration', eoj: '027901', name: 'Solar Power Generation' }
+        { key: 'solarPowerGeneration', eoj: '027901', name: 'Solar Power Generation' },
+        { key: 'powerDistributionBoardMetering', eoj: '028701', name: 'Power Distribution Board Metering' }
     ],
 
     // Japanese names for device display in modal
@@ -38,7 +39,8 @@ const App = {
         {eoj:"013001",name:"家庭用エアコン"},
         {eoj:"05ff01",name:"配電盤メータ"},
         {eoj:"027e01",name:"EV充電器・放電器"},
-        {eoj:"027901",name:"太陽光発電機"}
+        {eoj:"027901",name:"太陽光発電機"},
+        {eoj:"028701",name:"配電盤メータ（パナソニック スマートコスモIP）"}
     ],
 
     // Current status state
@@ -65,6 +67,11 @@ const App = {
             maintenanceStatus: "normal",
             instantaneousPowerConsumption: 0,
             cumulativeElectricEnergyConsumption: 0
+        },
+        powerDistributionBoardMetering: { 
+            operationStatus: "on", 
+            faultStatus: "noFault", 
+            currentLimit: 80 
         },
         solarPowerGeneration: { 
             operationStatus: "off",
@@ -235,6 +242,7 @@ const App = {
         try { DistributionPanelMeterController.updateStatus(); } catch(e) { console.error('Distribution Panel update error:', e); }
         try { EvChargerDischarger.updateStatus(); } catch(e) { console.error('EV Charger update error:', e); }
         try { SolarPowerGeneration.updateStatus(); } catch(e) { console.error('Solar Power update error:', e); }
+        try { PowerDistributionBoardMetering.updateStatus(); } catch(e) { console.error('PDBM update error:', e); }
     },
 
     // ============================================================
@@ -288,6 +296,10 @@ const App = {
             if (status.evChargerDischarger) {
                 this.currentStatus.evChargerDischarger = status.evChargerDischarger;
                 EvChargerDischarger.state = status.evChargerDischarger;
+            }
+            if (status.powerDistributionBoardMetering) {
+                this.currentStatus.powerDistributionBoardMetering = status.powerDistributionBoardMetering;
+                PowerDistributionBoardMetering.state = status.powerDistributionBoardMetering;
             }
             if (status.solarPowerGeneration) {
                 this.currentStatus.solarPowerGeneration = status.solarPowerGeneration;
@@ -390,6 +402,12 @@ window.setEvChargerMethod = (method) => EvChargerDischarger.setEvChargerMethod(m
 
 window.setSolarOperationStatus = (on) => SolarPowerGeneration.setSolarOperationStatus(on);
 window.setSolarPowerGeneration = (power) => SolarPowerGeneration.setSolarPowerGeneration(power);
+
+window.updatePdbmLimitDisplay = () => PowerDistributionBoardMetering.updatePdbmLimitDisplay();
+window.setPdbmLimit = (limit) => PowerDistributionBoardMetering.setPdbmLimit(limit);
+window.togglePdbmStatus = () => PowerDistributionBoardMetering.togglePdbmStatus();
+window.setPdbmOperationStatus = (on) => PowerDistributionBoardMetering.setPdbmOperationStatus(on);
+window.updatePdbmLimit = () => PowerDistributionBoardMetering.updatePdbmLimit();
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {

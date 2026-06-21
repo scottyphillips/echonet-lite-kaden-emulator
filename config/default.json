@@ -62,6 +62,10 @@
     "solarPowerGeneration": {
       "disabled": true,
       "id": ""
+    },
+    "powerDistributionBoardMetering": {
+      "disabled": true,
+      "id": ""
     }
   }
 }

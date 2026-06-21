@@ -17,6 +17,7 @@ import { AirConditionerDevice } from "./devices/airConditioner";
 import { DistributionPanelMeterControllerDevice, DistributionPanelMeterControllerStatus } from "./devices/distributionPanelMeterController";
 import { EvChargerDischargerDevice, EvChargerDischargerStatus } from "./devices/evChargerDischarger";
 import { SolarPowerGenerationDevice, SolarPowerGenerationStatus } from "./devices/solarPowerGeneration";
+import { PowerDistributionBoardMeteringDevice, PowerDistributionBoardMeteringStatus } from "./devices/powerDistributionBoardMetering";
 
 // Re-export types for backward compatibility
 export type { EchoObject, EchoStatus, ILogger, SendPropertyChangedMethod } from "./types";
@@ -83,6 +84,7 @@ export class Controller {
   private distributionPanelMeterController: DistributionPanelMeterControllerDevice;
   private evChargerDischarger: EvChargerDischargerDevice;
   private solarPowerGeneration: SolarPowerGenerationDevice;
+  private powerDistributionBoardMetering: PowerDistributionBoardMeteringDevice;
 
   constructor(logger: ILogger, settings: Settings) {
     this.logger = logger;
@@ -106,6 +108,7 @@ export class Controller {
     this.distributionPanelMeterController = new DistributionPanelMeterControllerDevice({ onPropertyChanged });
     this.evChargerDischarger = new EvChargerDischargerDevice({ onPropertyChanged });
     this.solarPowerGeneration = new SolarPowerGenerationDevice({ onPropertyChanged });
+    this.powerDistributionBoardMetering = new PowerDistributionBoardMeteringDevice({ onPropertyChanged });
 
     // Apply settings
     this.ceilingLight.enabled = !(settings.devices?.monoFunctionalLighting?.disabled ?? false);
@@ -121,6 +124,7 @@ export class Controller {
     this.distributionPanelMeterController.enabled = !(settings.devices?.distributionPanelMeterController?.disabled ?? false);
     this.evChargerDischarger.enabled = !(settings.devices?.evChargerDischarger?.disabled ?? false);
     this.solarPowerGeneration.enabled = !(settings.devices?.solarPowerGeneration?.disabled ?? false);
+    this.powerDistributionBoardMetering.enabled = !(settings.devices?.powerDistributionBoardMetering?.disabled ?? false);
 
     // Set common properties
     this.setCommonProperties(this.ceilingLight.echoObject, settings.devices?.monoFunctionalLighting?.id ?? "");
@@ -136,6 +140,7 @@ export class Controller {
     this.setCommonProperties(this.distributionPanelMeterController.echoObject, settings.devices?.distributionPanelMeterController?.id ?? "");
     this.setCommonProperties(this.evChargerDischarger.echoObject, settings.devices?.evChargerDischarger?.id ?? "");
     this.setCommonProperties(this.solarPowerGeneration.echoObject, settings.devices?.solarPowerGeneration?.id ?? "");
+    this.setCommonProperties(this.powerDistributionBoardMetering.echoObject, settings.devices?.powerDistributionBoardMetering?.id ?? "");
 
     // Start timer for animated devices
     setInterval(() => this.timer(), 1000);
@@ -146,7 +151,7 @@ export class Controller {
     eoj: string,
     propertyNo: string
   ): void => {
-    const enabledDevices = [this.ceilingLight, this.tempSensor, this.humSensor, this.motionSensor, this.floorLight, this.shutter, this.door, this.switchDevice, this.bathWaterHeater, this.airConditioner, this.distributionPanelMeterController, this.evChargerDischarger, this.solarPowerGeneration];
+    const enabledDevices = [this.ceilingLight, this.tempSensor, this.humSensor, this.motionSensor, this.floorLight, this.shutter, this.door, this.switchDevice, this.bathWaterHeater, this.airConditioner, this.distributionPanelMeterController, this.evChargerDischarger, this.solarPowerGeneration, this.powerDistributionBoardMetering];
     for (const device of enabledDevices) {
       if (device.enabled === false) continue;
 
@@ -611,6 +616,51 @@ export class Controller {
     res.json(this.solarPowerGeneration.status);
   };
 
+  // === Power Distribution Board Metering ===
+  public getPowerDistributionBoardMeteringStatus = (
+    req: express.Request,
+    res: express.Response
+  ): void => {
+    res.json(this.powerDistributionBoardMetering.status);
+  };
+
+  public setPowerDistributionBoardMeteringStatusFromRestApi = (
+    req: express.Request,
+    res: express.Response
+  ): void => {
+    const newStatus: Partial<PowerDistributionBoardMeteringStatus> = {};
+
+    if (req.body.operationStatus !== undefined) {
+      newStatus.operationStatus = req.body.operationStatus === "on" ? "on" : "off";
+    }
+
+    if (req.body.faultStatus !== undefined) {
+      newStatus.faultStatus = req.body.faultStatus === "faultOccurred" ? "faultOccurred" : "noFault";
+    }
+
+    if (req.body.currentLimit !== undefined) {
+      const limit = typeof req.body.currentLimit === "number"
+        ? Math.max(0, Math.min(100, req.body.currentLimit))
+        : this.powerDistributionBoardMetering.status.currentLimit;
+      newStatus.currentLimit = limit;
+    }
+
+    if (Object.keys(newStatus).length > 0) {
+      this.powerDistributionBoardMetering.setStatus(newStatus);
+      this.logger.dir(this.powerDistributionBoardMetering.status, { depth: 3 });
+    }
+
+    res.json(this.powerDistributionBoardMetering.status);
+  };
+
+  public setPowerDistributionBoardMeteringStatusFromEchoNet = (
+    echoObject: EchoObject,
+    propertyCodeText: string,
+    newValue: number[]
+  ): boolean => {
+    return this.powerDistributionBoardMetering.setStatusFromEchoNet(propertyCodeText, newValue);
+  };
+
   public setSolarPowerGenerationStatusFromRestApi = (
     req: express.Request,
     res: express.Response
@@ -659,6 +709,7 @@ export class Controller {
       distributionPanelMeterController: this.distributionPanelMeterController.status,
       evChargerDischarger: this.evChargerDischarger.status,
       solarPowerGeneration: this.solarPowerGeneration.status,
+      powerDistributionBoardMetering: this.powerDistributionBoardMetering.status,
       echoObjects: [
         { eoj: "029101", enabled: this.ceilingLight.enabled },
         { eoj: "001101", enabled: this.tempSensor.enabled },
@@ -673,6 +724,7 @@ export class Controller {
         { eoj: "05ff01", enabled: this.distributionPanelMeterController.enabled },
         { eoj: "027e01", enabled: this.evChargerDischarger.enabled },
         { eoj: "027901", enabled: this.solarPowerGeneration.enabled },
+        { eoj: "028701", enabled: this.powerDistributionBoardMetering.enabled },
       ]
     };
     res.json(result);
@@ -811,6 +863,13 @@ export class Controller {
           newValue
         );
       }
+      if ("028701" in echoObject) {
+        return this.setPowerDistributionBoardMeteringStatusFromEchoNet(
+          echoObject,
+          propertyCodeText,
+          newValue
+        );
+      }
     }
     return false;
   };
@@ -837,6 +896,7 @@ export class Controller {
       this.distributionPanelMeterController.echoStatus,
       this.evChargerDischarger.echoStatus,
       this.solarPowerGeneration.echoStatus,
+      this.powerDistributionBoardMetering.echoStatus,
     ];
   }
 
@@ -901,6 +961,8 @@ export class Controller {
       this.evChargerDischarger.enabled = enabled;
     } else if (eojLower === "027901") {
       this.solarPowerGeneration.enabled = enabled;
+    } else if (eojLower === "028701") {
+      this.powerDistributionBoardMetering.enabled = enabled;
     }
   }
 }
