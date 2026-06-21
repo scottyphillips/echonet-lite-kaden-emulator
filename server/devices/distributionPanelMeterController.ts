@@ -4,8 +4,8 @@ import { IBaseDevice, createEchoStatus, setCommonProperties } from "./baseDevice
 export interface DistributionPanelMeterControllerStatus {
   operationStatus: "on" | "off";
   faultStatus: "faultOccurred" | "noFault";
-  instantaneousPowerConsumption: number;
-  cumulativeElectricEnergy: number;
+  // instantaneousPowerConsumption: number;
+  // cumulativeElectricEnergy: number;
   currentLimit: number;
 }
 
@@ -17,7 +17,7 @@ export class DistributionPanelMeterControllerDevice implements IBaseDevice {
     operationStatus: "on",
     faultStatus: "noFault",
     // instantaneousPowerConsumption: 2342,
-    // cumulativeElectricEnergy: 15432,
+    //cumulativeElectricEnergy: 15432,
     currentLimit: 80,
   };
 
@@ -28,7 +28,7 @@ export class DistributionPanelMeterControllerDevice implements IBaseDevice {
       // Installation location
       81: [0x00],
       // Fault status (0x41=Fault, 0x42=No fault)
-      // 88: [0x42],
+      //88: [0x42],
       // Measured instantaneous power consumption (uint16, unit: W) - 2342W
       // 84: [0x09, 0x26],
       // Measured cumulative electric energy consumption (uint32, unit: 0.001 kWh) - 15.432 kWh
