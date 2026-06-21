@@ -29,12 +29,12 @@ export class BathWaterHeaterDevice {
       c7: [0x00], // Energy shift participation (0xC7): not participating=0x00
       c8: [0x14], // Boil start time (0xC8): 20:00 = 0x14
       c9: [0x01], // Energy shift count (0xC9): 1 time=0x01
-      ca: [0x00], // Daytime shift time 1 (0xCA): clear=0x00
-      cb: Array.from(new Array(32)).map(() => 0x00), // Predicted energy at shift time 1
-      cc: Array.from(new Array(32)).map(() => 0x00), // Hourly power consumption 1
-      cd: [0x00], // Daytime shift time 2 (0xCD): clear=0x00
-      ce: Array.from(new Array(24)).map(() => 0x00), // Predicted energy at shift time 2
-      cf: Array.from(new Array(12)).map(() => 0x00), // Hourly power consumption 2 (0xCF)
+      ca: [0x0a], // Daytime shift time 1 (0xCA): 10:00=0x0A, 13:00=0x0D, 15:00=0x0F, 17:00=0x11
+      cb: [0x00, 0x00, 0x03, 0xe8, 0x00, 0x00, 0x05, 0xfa, 0x00, 0x00, 0x04, 0xb2, 0x00, 0x00, 0x06, 0xc8], // Predicted energy at shift time 1 (Wh): 10:00=1000, 13:00=1530, 15:00=1202, 17:00=1736 (uint32 × 4)
+      cc: [0x0a, 0xc8, 0x0b, 0xbb, 0x09, 0x3c, 0x0d, 0xd0], // Hourly power consumption 1 (Wh): 10:00=2760, 13:00=3003, 15:00=2364, 17:00=3504 (uint16 × 4)
+      cd: [0x0d], // Daytime shift time 2 (0xCD): 13:00=0x0D, 15:00=0x0F, 17:00=0x11
+      ce: [0x00, 0x00, 0x04, 0xb2, 0x00, 0x00, 0x06, 0xc8, 0x00, 0x00, 0x05, 0xfa], // Predicted energy at shift time 2 (Wh): 13:00=1202, 15:00=1736, 17:00=1530 (uint32 × 3)
+      cf: [0x0b, 0xbb, 0x0d, 0xd0, 0x0a, 0xc8], // Hourly power consumption 2 (Wh): 13:00=3003, 15:00=3504, 17:00=2760 (uint16 × 3)
       d3: [41], // Bath temperature setting (0xD3): 0-100°C
       ea: [0x42], // Bath operation (0xEA): filling=0x41, keeping heat=0x43, stopped=0x42
       "9d": [0x07, 0x80, 0xb0, 0xb2, 0xc3, 0xd3, 0xea], // Status change announcement property map
