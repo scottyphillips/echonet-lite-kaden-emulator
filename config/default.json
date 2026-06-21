@@ -50,6 +50,14 @@
     "homeAirConditioner": {
       "disabled": false,
       "id": ""
+    },
+    "distributionPanelMeter": {
+      "disabled": false,
+      "id": ""
+    },
+    "evChargerDischarger": {
+      "disabled": false,
+      "id": ""
     }
   }
 }

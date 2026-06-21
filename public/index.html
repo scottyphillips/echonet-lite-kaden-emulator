@@ -980,11 +980,11 @@
                         <div class="device-icon sensor">&#9881;</div>
                         <div>
                             <div class="device-name">EV Charger Discharger</div>
-                            <div class="device-eoj">EOJ: 027B01 - EV Charger/Discharger</div>
+                            <div class="device-eoj">EOJ: 027E01 - EV Charger Discharger</div>
                         </div>
                     </div>
                     <label class="card-toggle">
-                        <input type="checkbox" checked onchange="toggleDevice('evChargerDischarger', '027b01', this.checked)">
+                        <input type="checkbox" checked onchange="toggleDevice('evChargerDischarger', '027e01', this.checked)">
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
@@ -999,6 +999,14 @@
                             <div class="status-value" id="evc-fault-display">--</div>
                         </div>
                         <div class="status-item">
+                            <div class="status-label">Vehicle Connection</div>
+                            <div class="status-value" id="evc-vehicle-display" style="font-size:12px;">--</div>
+                        </div>
+                        <div class="status-item">
+                            <div class="status-label">Actual Mode</div>
+                            <div class="status-value" id="evc-actualMode-display">--</div>
+                        </div>
+                        <div class="status-item">
                             <div class="status-label">Power</div>
                             <div class="status-value"><span id="evc-power-display">0</span><span class="unit">W</span></div>
                         </div>
@@ -1008,9 +1016,16 @@
                         </div>
                     </div>
                     <div class="control-section">
-                        <div class="action-buttons">
-                            <button class="action-btn" onclick="setEvChargerState('on')">CHARGE ON</button>
-                            <button class="action-btn danger" onclick="setEvChargerState('off')">CHARGE OFF</button>
+                        <div class="control-label">Operation Mode</div>
+                        <div class="mode-buttons" id="evc-modes">
+                            <button class="mode-btn" data-mode="charge" onclick="setEvChargerMode('charge')">CHARGE</button>
+                            <button class="mode-btn" data-mode="discharge" onclick="setEvChargerMode('discharge')">DISCHARGE</button>
+                            <button class="mode-btn" data-mode="standby" onclick="setEvChargerMode('standby')">STANDBY</button>
+                        </div>
+                        <div class="control-label" style="margin-top: 12px;">Charging Method</div>
+                        <div class="mode-buttons" id="evc-charging-methods">
+                            <button class="mode-btn" data-method="maxChargingPower" onclick="setEvChargerMethod('maxChargingPower')">MAX POWER</button>
+                            <button class="mode-btn" data-method="designatedPower" onclick="setEvChargerMethod('designatedPower')">DESIGNATED POWER</button>
                         </div>
                     </div>
                 </div>
@@ -1052,7 +1067,20 @@
             door: { state: "closed", lockState: "unlocked" },
             bathWaterHeater: { state: "empty", auto: "off", temp: 40, waterLevel: 0, timerRunning: false },
             distributionPanelMeter: { operationStatus: "on", faultStatus: "noFault", instantaneousPowerConsumption: 0, cumulativeElectricEnergy: 0, currentLimit: 100 },
-            evChargerDischarger: { state: "off", fault: false, instantaneousPower: 0, cumulativeEnergy: 0 }
+            evChargerDischarger: { 
+                operationStatus: "off",
+                installationLocation: "Outdoor",
+                faultStatus: "noFault",
+                vehicleConnectionAndChargeableStatus: "chargeableAndDischargeable",
+                operationModeSetting: "charge",
+                systemInterconnectionType: "gridConnectionReverseFlowAcceptable",
+                chargingMethod: "maxChargingPower",
+                dischargingMethod: "loadFollowing",
+                actualOperationMode: "standby",
+                maintenanceStatus: "normal",
+                instantaneousPowerConsumption: 0,
+                cumulativeElectricEnergyConsumption: 0
+            }
         };
 
         // Device EOJ mapping for the device manager modal
@@ -1068,7 +1096,7 @@
             { key: 'bath', eoj: '026b01', name: 'Bath Water Heater' },
             { key: 'airConditioner', eoj: '013001', name: 'Air Conditioner' },
             { key: 'distributionPanelMeter', eoj: '05ff01', name: 'Distribution Panel Meter' },
-            { key: 'evChargerDischarger', eoj: '027b01', name: 'EV Charger Discharger' }
+            { key: 'evChargerDischarger', eoj: '027e01', name: 'EV Charger Discharger' }
         ];
 
         // Japanese names for device display in modal
@@ -1084,7 +1112,7 @@
             {eoj:"026b01",name:"電気温水器"},
             {eoj:"013001",name:"家庭用エアコン"},
             {eoj:"05ff01",name:"配電盤メータ"},
-            {eoj:"027b01",name:"EV充電器・放電器"}
+            {eoj:"027e01",name:"EV充電器・放電器"}
         ];
 
         // Debounce timers for sliders
@@ -1318,16 +1346,73 @@
             } catch (e) { console.error("EV Charger error:", e); }
         }
 
-        function updateEvcChargerStatus() {
-            const state = currentStatus.evChargerDischarger.state;
-            const fault = currentStatus.evChargerDischarger.fault;
-            const power = currentStatus.evChargerDischarger.instantaneousPower;
-            const energy = currentStatus.evChargerDischarger.cumulativeEnergy / 1000;
+        async function setEvChargerMode(mode) {
+            try {
+                await fetch("/api/evChargerDischarger", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ operationMode: mode })
+                });
+                getStatus();
+            } catch (e) { console.error("EV Charger mode error:", e); }
+        }
 
-            document.getElementById('evc-status-display').textContent = state.toUpperCase();
-            document.getElementById('evc-fault-display').textContent = fault ? "FAULT" : "OK";
-            document.getElementById('evc-power-display').textContent = power;
-            document.getElementById('evc-energy-display').textContent = energy.toFixed(3);
+        async function setEvChargerMethod(method) {
+            try {
+                await fetch("/api/evChargerDischarger", {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chargingMethod: method })
+                });
+                getStatus();
+            } catch (e) { console.error("EV Charger method error:", e); }
+        }
+
+        function updateEvcChargerStatus() {
+            const evc = currentStatus.evChargerDischarger;
+            
+            // Operation status
+            document.getElementById('evc-status-display').textContent = evc.operationStatus === "on" ? "ON" : "OFF";
+            
+            // Fault status
+            document.getElementById('evc-fault-display').textContent = evc.faultStatus === "noFault" ? "OK" : "FAULT";
+            
+            // Vehicle connection and chargeable status
+            const vehicleMap = {
+                "notConnected": "Not Connected",
+                "connected": "Connected",
+                "chargeable": "Chargeable",
+                "dischargeable": "Dischargeable",
+                "chargeableAndDischargeable": "Charge & Discharge"
+            };
+            document.getElementById('evc-vehicle-display').textContent = vehicleMap[evc.vehicleConnectionAndChargeableStatus] || "--";
+            
+            // Actual operation mode
+            const actualModeMap = {
+                "charge": "CHARGE",
+                "discharge": "DISCHARGE",
+                "standby": "STANDBY",
+                "idle": "IDLE",
+                "preparation": "PREP",
+                "other": "OTHER"
+            };
+            document.getElementById('evc-actualMode-display').textContent = actualModeMap[evc.actualOperationMode] || "--";
+            
+            // Power consumption
+            document.getElementById('evc-power-display').textContent = evc.instantaneousPowerConsumption;
+            
+            // Energy consumption (convert from 0.001kWh to kWh)
+            document.getElementById('evc-energy-display').textContent = (evc.cumulativeElectricEnergyConsumption / 1000).toFixed(3);
+
+            // Update mode buttons
+            document.querySelectorAll('#evc-modes .mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === evc.operationModeSetting);
+            });
+
+            // Update charging method buttons
+            document.querySelectorAll('#evc-charging-methods .mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.method === evc.chargingMethod);
+            });
         }
 
         // Distribution Panel Meter

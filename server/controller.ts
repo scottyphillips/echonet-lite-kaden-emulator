@@ -494,9 +494,32 @@ export class Controller {
     req: express.Request,
     res: express.Response
   ): void => {
-    this.setEvChargerDischargerStatus({
-      state: req.body.state,
-    });
+    // Handle operation status (0x80) from REST API
+    if (req.body.state !== undefined) {
+      this.setEvChargerDischargerStatus({
+        operationStatus: req.body.state === "on" ? "on" : "off",
+      });
+    }
+    
+    // Handle operation mode setting (0xDA) from REST API
+    if (req.body.operationMode !== undefined) {
+      const modeMap: Record<string, EvChargerDischargerStatus["operationModeSetting"]> = {
+        "charge": "charge",
+        "discharge": "discharge",
+        "standby": "standby",
+        "rapidCharge": "rapidCharge",
+        "test": "test",
+        "other": "other"
+      };
+      if (modeMap[req.body.operationMode]) {
+        this.setEvChargerDischargerStatus({ 
+          operationModeSetting: modeMap[req.body.operationMode],
+          // Also update operation status when changing mode
+          operationStatus: req.body.operationMode !== "standby" ? "on" : "off"
+        });
+      }
+    }
+    
     res.json(this.evChargerDischarger.status);
   };
 
@@ -658,7 +681,7 @@ export class Controller {
           newValue
         );
       }
-      if ("027b01" in echoObject) {
+      if ("027e01" in echoObject) {
         return this.setEvChargerDischargerStatusFromEchoNet(
           echoObject,
           propertyCodeText,
@@ -750,7 +773,7 @@ export class Controller {
       this.airConditioner.enabled = enabled;
     } else if (eojLower === "05ff01") {
       this.distributionPanelMeter.enabled = enabled;
-    } else if (eojLower === "027b01") {
+    } else if (eojLower === "027e01") {
       this.evChargerDischarger.enabled = enabled;
     }
   }
