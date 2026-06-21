@@ -1423,7 +1423,7 @@
 
         async function setDpmlLimit(limit) {
             try {
-                await fetch("/api/distributionPanelMeter", {
+                await fetch("/api/distributionPanelMeterController", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ currentLimit: limit })
@@ -1433,13 +1433,13 @@
         }
 
         async function toggleDpmlStatus() {
-            const newState = currentStatus.distributionPanelMeter.operationStatus === "on" ? "off" : "on";
+            const newState = currentStatus.distributionPanelMeterController.operationStatus === "on" ? "off" : "on";
             await setDpmlOperationStatus(newState);
         }
 
         async function setDpmlOperationStatus(on) {
             try {
-                await fetch("/api/distributionPanelMeter", {
+                await fetch("/api/distributionPanelMeterController", {
                     method: "POST",
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ operationStatus: on ? "on" : "off" })
