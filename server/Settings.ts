@@ -41,7 +41,7 @@ export interface Settings {
       disabled?:boolean;
       id?: string;
     };
-    distributionPanelMeter?:{
+    distributionPanelMeterController?:{
       disabled?:boolean;
       id?: string;
     };

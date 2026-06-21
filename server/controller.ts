@@ -14,7 +14,7 @@ import { ShutterDevice } from "./devices/shutter";
 import { DoorDevice, SwitchDevice } from "./devices/door";
 import { BathWaterHeaterDevice } from "./devices/bathWaterHeater";
 import { AirConditionerDevice } from "./devices/airConditioner";
-import { DistributionPanelMeterDevice } from "./devices/distributionPanelMeter";
+import { DistributionPanelMeterControllerDevice } from "./devices/distributionPanelMeterController";
 import { EvChargerDischargerDevice, EvChargerDischargerStatus } from "./devices/evChargerDischarger";
 
 // Re-export types for backward compatibility
@@ -79,7 +79,7 @@ export class Controller {
   private switchDevice: SwitchDevice;
   private bathWaterHeater: BathWaterHeaterDevice;
   private airConditioner: AirConditionerDevice;
-  private distributionPanelMeter: DistributionPanelMeterDevice;
+  private distributionPanelMeterController: DistributionPanelMeterControllerDevice;
   private evChargerDischarger: EvChargerDischargerDevice;
 
   constructor(logger: ILogger, settings: Settings) {
@@ -101,7 +101,7 @@ export class Controller {
     this.switchDevice = new SwitchDevice({ onPropertyChanged });
     this.bathWaterHeater = new BathWaterHeaterDevice({ onPropertyChanged });
     this.airConditioner = new AirConditionerDevice({ onPropertyChanged });
-    this.distributionPanelMeter = new DistributionPanelMeterDevice({ onPropertyChanged });
+    this.distributionPanelMeterController = new DistributionPanelMeterControllerDevice({ onPropertyChanged });
     this.evChargerDischarger = new EvChargerDischargerDevice({ onPropertyChanged });
 
     // Apply settings
@@ -115,7 +115,7 @@ export class Controller {
     this.airConditioner.enabled = !(settings.devices?.homeAirConditioner?.disabled ?? false);
     this.door.enabled = !(settings.devices?.electricLock?.disabled ?? false);
     this.switchDevice.enabled = !(settings.devices?.switch?.disabled ?? false);
-    this.distributionPanelMeter.enabled = !(settings.devices?.distributionPanelMeter?.disabled ?? false);
+    this.distributionPanelMeterController.enabled = !(settings.devices?.distributionPanelMeterController?.disabled ?? false);
     this.evChargerDischarger.enabled = !(settings.devices?.evChargerDischarger?.disabled ?? false);
 
     // Set common properties
@@ -129,7 +129,7 @@ export class Controller {
     this.setCommonProperties(this.switchDevice.echoObject, settings.devices?.switch?.id ?? "");
     this.setCommonProperties(this.bathWaterHeater.echoObject, settings.devices?.electricWaterHeater?.id ?? "");
     this.setCommonProperties(this.airConditioner.echoObject, settings.devices?.homeAirConditioner?.id ?? "");
-    this.setCommonProperties(this.distributionPanelMeter.echoObject, settings.devices?.distributionPanelMeter?.id ?? "");
+    this.setCommonProperties(this.distributionPanelMeterController.echoObject, settings.devices?.distributionPanelMeterController?.id ?? "");
     this.setCommonProperties(this.evChargerDischarger.echoObject, settings.devices?.evChargerDischarger?.id ?? "");
 
     // Start timer for animated devices
@@ -141,7 +141,7 @@ export class Controller {
     eoj: string,
     propertyNo: string
   ): void => {
-    const enabledDevices = [this.ceilingLight, this.tempSensor, this.humSensor, this.motionSensor, this.floorLight, this.shutter, this.door, this.switchDevice, this.bathWaterHeater, this.airConditioner, this.distributionPanelMeter, this.evChargerDischarger];
+    const enabledDevices = [this.ceilingLight, this.tempSensor, this.humSensor, this.motionSensor, this.floorLight, this.shutter, this.door, this.switchDevice, this.bathWaterHeater, this.airConditioner, this.distributionPanelMeterController, this.evChargerDischarger];
     for (const device of enabledDevices) {
       if (device.enabled === false) continue;
 
@@ -576,7 +576,7 @@ export class Controller {
       door: this.door.status,
       bath: this.bathWaterHeater.status,
       airConditioner: this.airConditioner.status,
-      distributionPanelMeter: this.distributionPanelMeter.status,
+      distributionPanelMeterController: this.distributionPanelMeterController.status,
       evChargerDischarger: this.evChargerDischarger.status,
       echoObjects: [
         this.ceilingLight.echoStatus,
@@ -589,7 +589,7 @@ export class Controller {
         this.switchDevice.echoStatus,
         this.bathWaterHeater.echoStatus,
         this.airConditioner.echoStatus,
-        this.distributionPanelMeter.echoStatus,
+        this.distributionPanelMeterController.echoStatus,
         this.evChargerDischarger.echoStatus,
       ]
     };
@@ -710,7 +710,7 @@ export class Controller {
         );
       }
       if ("05ff01" in echoObject) {
-        return this.distributionPanelMeter.setStatusFromEchoNet(
+        return this.distributionPanelMeterController.setStatusFromEchoNet(
           propertyCodeText,
           newValue
         );
@@ -745,7 +745,7 @@ export class Controller {
       this.switchDevice.echoStatus,
       this.bathWaterHeater.echoStatus,
       this.airConditioner.echoStatus,
-      this.distributionPanelMeter.echoStatus,
+      this.distributionPanelMeterController.echoStatus,
       this.evChargerDischarger.echoStatus,
     ];
   }
@@ -806,7 +806,7 @@ export class Controller {
     } else if (eojLower === "013001") {
       this.airConditioner.enabled = enabled;
     } else if (eojLower === "05ff01") {
-      this.distributionPanelMeter.enabled = enabled;
+      this.distributionPanelMeterController.enabled = enabled;
     } else if (eojLower === "027e01") {
       this.evChargerDischarger.enabled = enabled;
     }
