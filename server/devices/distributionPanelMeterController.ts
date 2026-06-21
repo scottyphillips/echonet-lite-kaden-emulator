@@ -16,8 +16,8 @@ export class DistributionPanelMeterControllerDevice implements IBaseDevice {
   private _status: DistributionPanelMeterControllerStatus = {
     operationStatus: "on",
     faultStatus: "noFault",
-    instantaneousPowerConsumption: 2342,
-    cumulativeElectricEnergy: 15432,
+    // instantaneousPowerConsumption: 2342,
+    // cumulativeElectricEnergy: 15432,
     currentLimit: 80,
   };
 
