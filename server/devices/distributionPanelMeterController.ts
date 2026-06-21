@@ -4,8 +4,8 @@ import { IBaseDevice, createEchoStatus, setCommonProperties } from "./baseDevice
 export interface DistributionPanelMeterControllerStatus {
   operationStatus: "on" | "off";
   faultStatus: "faultOccurred" | "noFault";
-  instantaneousPowerConsumption: number;
-  cumulativeElectricEnergy: number;
+  //instantaneousPowerConsumption: number;
+  //cumulativeElectricEnergy: number;
   currentLimit: number;
 }
 
@@ -16,8 +16,8 @@ export class DistributionPanelMeterControllerDevice implements IBaseDevice {
   private _status: DistributionPanelMeterControllerStatus = {
     operationStatus: "on",
     faultStatus: "noFault",
-    instantaneousPowerConsumption: 2342,
-    cumulativeElectricEnergy: 15432,
+    //instantaneousPowerConsumption: 2342,
+    //cumulativeElectricEnergy: 15432,
     currentLimit: 80,
   };
 
@@ -30,9 +30,9 @@ export class DistributionPanelMeterControllerDevice implements IBaseDevice {
       // Fault status (0x41=Fault, 0x42=No fault)
       88: [0x42],
       // Measured instantaneous power consumption (uint16, unit: W) - 2342W
-      84: [0x09, 0x26],
+      //84: [0x09, 0x26],
       // Measured cumulative electric energy consumption (uint32, unit: 0.001 kWh) - 15.432 kWh
-      85: [0x00, 0x00, 0x3C, 0x18],
+      //85: [0x00, 0x00, 0x3C, 0x18],
       // Current limit setting (uint8, unit: %) - 80%
       87: [0x50],
       // Fault description (single byte) - No fault
@@ -105,33 +105,33 @@ export class DistributionPanelMeterControllerDevice implements IBaseDevice {
       }
     }
 
-    if (newStatus.instantaneousPowerConsumption !== undefined) {
-      const value = Math.max(0, Math.min(65533, newStatus.instantaneousPowerConsumption));
-      if (this._status.instantaneousPowerConsumption !== value) {
-        this._status.instantaneousPowerConsumption = value;
-        this._echoObject["05ff01"]["84"] = [
-          (value >> 8) & 0xff,
-          value & 0xff,
-        ];
-        this.notifyPropertyChanged("84");
-        changed = true;
-      }
-    }
+    // if (newStatus.instantaneousPowerConsumption !== undefined) {
+    //   const value = Math.max(0, Math.min(65533, newStatus.instantaneousPowerConsumption));
+    //   if (this._status.instantaneousPowerConsumption !== value) {
+    //     this._status.instantaneousPowerConsumption = value;
+    //     this._echoObject["05ff01"]["84"] = [
+    //       (value >> 8) & 0xff,
+    //       value & 0xff,
+    //     ];
+    //     this.notifyPropertyChanged("84");
+    //     changed = true;
+    //   }
+    // }
 
-    if (newStatus.cumulativeElectricEnergy !== undefined) {
-      const value = Math.max(0, Math.min(999999999, newStatus.cumulativeElectricEnergy));
-      if (this._status.cumulativeElectricEnergy !== value) {
-        this._status.cumulativeElectricEnergy = value;
-        this._echoObject["05ff01"]["85"] = [
-          (value >> 24) & 0xff,
-          (value >> 16) & 0xff,
-          (value >> 8) & 0xff,
-          value & 0xff,
-        ];
-        this.notifyPropertyChanged("85");
-        changed = true;
-      }
-    }
+    // if (newStatus.cumulativeElectricEnergy !== undefined) {
+    //   const value = Math.max(0, Math.min(999999999, newStatus.cumulativeElectricEnergy));
+    //   if (this._status.cumulativeElectricEnergy !== value) {
+    //     this._status.cumulativeElectricEnergy = value;
+    //     this._echoObject["05ff01"]["85"] = [
+    //       (value >> 24) & 0xff,
+    //       (value >> 16) & 0xff,
+    //       (value >> 8) & 0xff,
+    //       value & 0xff,
+    //     ];
+    //     this.notifyPropertyChanged("85");
+    //     changed = true;
+    //   }
+    // }
 
     if (newStatus.currentLimit !== undefined) {
       const value = Math.max(0, Math.min(100, newStatus.currentLimit));
@@ -215,16 +215,16 @@ export class DistributionPanelMeterControllerDevice implements IBaseDevice {
   /**
    * Update power consumption value from ECHONET notification.
    */
-  updatePowerConsumption(watts: number): void {
-    this.setStatus({ instantaneousPowerConsumption: watts });
-  }
+  // updatePowerConsumption(watts: number): void {
+  //   this.setStatus({ instantaneousPowerConsumption: watts });
+  // }
 
   /**
    * Update cumulative energy consumption (in kWh).
    */
-  updateEnergyConsumption(kwh: number): void {
-    this.setStatus({ cumulativeElectricEnergy: kwh });
-  }
+  // updateEnergyConsumption(kwh: number): void {
+  //   this.setStatus({ cumulativeElectricEnergy: kwh });
+  // }
 
   /**
    * Simulate a fault condition.
