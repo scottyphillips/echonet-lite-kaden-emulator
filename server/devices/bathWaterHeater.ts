@@ -6,6 +6,7 @@ export interface BathWaterHeaterStatus {
   auto: "off" | "on";
   temp: number;
   waterLevel: number; // 0:empty, 100:full
+  timerRunning: boolean; // Whether the auto-fill timer is active
 }
 
 export class BathWaterHeaterDevice {
@@ -17,12 +18,13 @@ export class BathWaterHeaterDevice {
     auto: "off",
     temp: 41,
     waterLevel: 0,
+    timerRunning: false,
   };
   private _echoObject: EchoObject = {
     "026b01": {
       80: [0x30], // Operation status (0x80): 0x30
       b0: [0x41], // Auto boil setting (0xB0): auto boil=0x41
-      b2: [0x40], // Boiling state (0xB2): boiling=0x41
+      b2: [0x41], // Boiling state (0xB2): boiling=0x41
       c0: [0x42], // Daytime refill permission (0xC0): prohibited=0x42
       c3: [0x42], // Hot water supply state (0xC3): not supplying=0x42
       e3: [0x42], // Bath auto mode (0xE3): on=0x41, off=0x42
@@ -37,7 +39,7 @@ export class BathWaterHeaterDevice {
       cf: [0x0b, 0xbb, 0x0d, 0xd0, 0x0a, 0xc8], // Hourly power consumption 2 (Wh): 13:00=3003, 15:00=3504, 17:00=2760 (uint16 × 3)
       d3: [41], // Bath temperature setting (0xD3): 0-100°C
       ea: [0x42], // Bath operation (0xEA): filling=0x41, keeping heat=0x43, stopped=0x42
-      "9d": [0x07, 0x80, 0xb0, 0xb2, 0xc3, 0xd3, 0xea], // Status change announcement property map
+      "9d": [0x07, 0x80, 0xb0, 0xb2, 0xc3, 0xd3, 0xea, 0xe3], // Status change announcement property map
       "9e": [0x04, 0x80, 0xb0, 0xd3, 0xe3], // Set property map
     },
   };
@@ -85,6 +87,7 @@ export class BathWaterHeaterDevice {
       state: this._status.state,
       temp: this._status.temp,
       waterLevel: this._status.waterLevel,
+      timerRunning: this._status.timerRunning,
     };
 
     if (propertyCodeText === "d3") {
@@ -105,62 +108,88 @@ export class BathWaterHeaterDevice {
 
   /**
    * Tick function for timer-based water level changes.
-   * Called periodically when auto mode is active.
-   * Simulates water filling/draining based on auto mode state.
+   * Called every second by the controller timer.
+   * Simulates water filling (20%/sec) when auto mode is ON.
+   * Simulates water draining (20%/sec) when auto mode is OFF and water exists.
    */
   tick(): void {
+    // Debug logging to trace tick execution
+    console.log(`[BathWaterHeater] tick() called: auto=${this._status.auto}, waterLevel=${this._status.waterLevel}, enabled=${this.enabled}`);
+
+    // Track whether timer should be running for UI feedback
+    this._status.timerRunning = (this._status.auto === "on" && this._status.waterLevel < 100);
+
     if (this._status.auto === "on" && this._status.waterLevel < 100) {
+      // Filling: increase water level by 20% per second
       this._status.waterLevel += 20;
+      
       if (this._status.waterLevel >= 100) {
+        // Bath is full - switch to keeping heat mode
         this._status.waterLevel = 100;
         this._status.state = "full";
+        this._status.timerRunning = false;
         this._echoObject["026b01"]["ea"] = [0x43]; // Keeping heat=0x43
         this.notifyPropertyChanged("ea");
       } else {
+        // Still filling
         this._status.state = "supply";
         this._echoObject["026b01"]["ea"] = [0x41]; // Filling=0x41
         this.notifyPropertyChanged("ea");
       }
     } else if (this._status.auto === "off" && this._status.waterLevel > 0) {
+      // Draining: decrease water level by 20% per second
       this._status.waterLevel -= 20;
+      
       if (this._status.waterLevel <= 0) {
+        // Bath is empty
         this._status.waterLevel = 0;
         this._status.state = "empty";
+        this._status.timerRunning = false;
         this._echoObject["026b01"]["ea"] = [0x42]; // Stopped=0x42
         this.notifyPropertyChanged("ea");
       } else {
+        // Still draining
         this._status.state = "drainage";
-        this._echoObject["026b01"]["ea"] = [0x42]; // Stopped=0x42
+        this._echoObject["026b01"]["ea"] = [0x42]; // Stopped/Draining=0x42
         this.notifyPropertyChanged("ea");
       }
     }
   }
 
   private handleAutoChange(auto: "on" | "off"): void {
+    console.log(`[BathWaterHeater] handleAutoChange called: ${auto}, current=${this._status.auto}, waterLevel=${this._status.waterLevel}`);
     if (this._status.auto !== auto) {
       this._status.auto = auto;
+      console.log(`[BathWaterHeater] Auto mode changed to: ${auto}`);
+      
       if (auto === "on") {
+        // Auto mode turned ON
         this._echoObject["026b01"]["e3"] = [0x41]; // Auto on=0x41
         this.notifyPropertyChanged("e3");
 
         if (this._status.waterLevel < 100) {
+          // Start filling if bath isn't full
           this._status.state = "supply";
           this._echoObject["026b01"]["ea"] = [0x41]; // Filling=0x41
           this.notifyPropertyChanged("ea");
-        } else if (this._status.waterLevel === 100) {
+        } else {
+          // Bath is already full - keeping heat mode
           this._status.state = "full";
           this._echoObject["026b01"]["ea"] = [0x43]; // Keeping heat=0x43
           this.notifyPropertyChanged("ea");
         }
       } else {
+        // Auto mode turned OFF
         this._echoObject["026b01"]["e3"] = [0x42]; // Auto off=0x42
         this.notifyPropertyChanged("e3");
 
         if (this._status.waterLevel > 0) {
+          // Start draining if there's water in the bath
           this._status.state = "drainage";
-          this._echoObject["026b01"]["ea"] = [0x42]; // Stopped=0x42
+          this._echoObject["026b01"]["ea"] = [0x42]; // Stopped/Draining=0x42
           this.notifyPropertyChanged("ea");
-        } else if (this._status.waterLevel === 0) {
+        } else {
+          // Bath is already empty
           this._status.state = "empty";
           this._echoObject["026b01"]["ea"] = [0x42]; // Stopped=0x42
           this.notifyPropertyChanged("ea");

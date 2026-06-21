@@ -1007,7 +1007,7 @@
             motionSensor: { state: "notDetected" },
             shutter: { state: "closed", position: 0, move: "stopped" },
             door: { state: "closed", lockState: "unlocked" },
-            bathWaterHeater: { state: "empty", auto: "off", temp: 40, waterLevel: 0 },
+            bathWaterHeater: { state: "empty", auto: "off", temp: 40, waterLevel: 0, timerRunning: false },
             distributionPanelMeter: { operationStatus: "on", faultStatus: "noFault", instantaneousPowerConsumption: 0, cumulativeElectricEnergy: 0, currentLimit: 100 }
         };
 
@@ -1504,9 +1504,29 @@
             document.getElementById('bath-state-display').textContent = state;
             document.getElementById('bath-temp-display').textContent = temp;
 
-            // Update water level progress
+            // Update water level progress bar
             const waterLevel = currentStatus.bathWaterHeater.waterLevel || 0;
-            document.getElementById('bath-progress').style.width = waterLevel + '%';
+            const progressBar = document.getElementById('bath-progress');
+            progressBar.style.width = waterLevel + '%';
+            
+            // Change progress bar color based on state
+            if (currentStatus.bathWaterHeater.timerRunning) {
+                // Animated pulsing effect when timer is running (filling)
+                progressBar.style.background = 'linear-gradient(90deg, #3b82f6, #06b6d4)';
+                progressBar.style.animation = 'pulse 1s infinite';
+            } else if (waterLevel >= 100) {
+                // Green when full (keeping heat)
+                progressBar.style.background = 'linear-gradient(90deg, #10b981, #059669)';
+                progressBar.style.animation = 'none';
+            } else if (waterLevel > 0 && currentStatus.bathWaterHeater.auto === 'off') {
+                // Orange when draining
+                progressBar.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
+                progressBar.style.animation = 'none';
+            } else {
+                // Default when empty
+                progressBar.style.background = 'linear-gradient(90deg, var(--accent-blue), var(--accent-cyan))';
+                progressBar.style.animation = 'none';
+            }
 
             // Update auto mode buttons
             document.getElementById('bath-auto-on').classList.toggle('active', currentStatus.bathWaterHeater.auto === 'on');

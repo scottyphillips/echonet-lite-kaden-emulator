@@ -54,6 +54,7 @@ interface BathWaterHeaterStatus {
   auto: "off" | "on";
   temp: number;
   waterLevel: number; // 0:空、100:Full
+  timerRunning?: boolean; // Whether the auto-fill timer is active
 }
 
 interface AirConditionerStatus {
