@@ -502,6 +502,9 @@ app.post(
 app.get("/api/airConditioner", controller.getAirConditionerStatus);
 app.post("/api/airConditioner", controller.setAirConditionerStatusFromRestApi);
 
+app.get("/api/evChargerDischarger", controller.getEvChargerDischargerStatus);
+app.post("/api/evChargerDischarger", controller.setEvChargerDischargerStatusFromRestApi);
+
 app.post("/api/commands/:command", controller.postCommandsFromRestApi);
 
 const server = app.listen(webPort, function () {
