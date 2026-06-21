@@ -28,9 +28,9 @@ export class DistributionPanelMeterControllerDevice implements IBaseDevice {
       // Installation location
       81: [0x00],
       // Fault status (0x41=Fault, 0x42=No fault)
-      88: [0x42],
+      // 88: [0x42],
       // Measured instantaneous power consumption (uint16, unit: W) - 2342W
-      84: [0x09, 0x26],
+      // 84: [0x09, 0x26],
       // Measured cumulative electric energy consumption (uint32, unit: 0.001 kWh) - 15.432 kWh
       85: [0x00, 0x00, 0x3C, 0x18],
       // Current limit setting (uint8, unit: %) - 80%
