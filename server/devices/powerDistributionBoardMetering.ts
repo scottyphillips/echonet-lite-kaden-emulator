@@ -86,10 +86,10 @@ export class PowerDistributionBoardMeteringDevice implements IBaseDevice {
       "89": [0x00],
       // EPC 0xB0 (176): Master rated capacity
       "b0": [0x3c],
-      // EPC 0xB2 (178): Channel range specification for instantaneous power consumption measurement (simplex)
-      "b2": [0x01, 0x01],
-      // EPC 0xB6 (182): Channel range specification for instantaneous power consumption measurement (duplex)
-      "b6": [0x01, 0x01],
+      // EPC 0xB2 (178): Channel range specification for cumulative amount of electric power consumption measurement (simplex) - channels 1-29
+      "b2": [0x01, 0x1D],
+      // EPC 0xB6 (182): Channel range specification for instantaneous power consumption measurement (simplex) - channels 1-29
+      "b6": [0x01, 0x1D],
       // EPC 0xC0 (192): Measured cumulative amount of electric energy (normal direction)
       "c0": [0x00, 0x00, 0x00, 0x01],
       // EPC 0xC6 (198): Measured instantaneous amount of electric energy
