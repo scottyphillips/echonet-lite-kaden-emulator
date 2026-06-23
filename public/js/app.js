@@ -236,3 +236,104 @@ window.togglePdbmStatus        = ()    => PowerDistributionBoardMetering.toggleP
 window.setPdbmOperationStatus  = (on)  => PowerDistributionBoardMetering.setPdbmOperationStatus(on);
 
 document.addEventListener('DOMContentLoaded', () => App.init());
+
+// ============================================================
+// Card Drag-and-Drop Ordering
+// ============================================================
+
+const CardOrder = {
+    STORAGE_KEY: 'echonet-card-order',
+    draggingEl: null,
+
+    // Persist current DOM order to localStorage
+    save() {
+        const grid  = document.getElementById('deviceGrid');
+        const order = [...grid.querySelectorAll('.device-card')].map(c => c.id);
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(order));
+    },
+
+    // Restore saved order on page load
+    restore() {
+        const raw = localStorage.getItem(this.STORAGE_KEY);
+        if (!raw) return;
+        let order;
+        try { order = JSON.parse(raw); } catch { return; }
+
+        const grid = document.getElementById('deviceGrid');
+        for (const id of order) {
+            const card = document.getElementById(id);
+            if (card) grid.appendChild(card); // moves to end in saved sequence
+        }
+    },
+
+    init() {
+        const grid = document.getElementById('deviceGrid');
+
+        grid.addEventListener('dragstart', e => {
+            const card = e.target.closest('.device-card');
+            if (!card) return;
+            this.draggingEl = card;
+            // Defer class add so the browser snapshot is taken first
+            requestAnimationFrame(() => card.classList.add('dragging'));
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        grid.addEventListener('dragend', () => {
+            this.draggingEl?.classList.remove('dragging');
+            grid.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            this.draggingEl = null;
+            this.save();
+        });
+
+        grid.addEventListener('dragover', e => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            const target = e.target.closest('.device-card');
+            if (!target || target === this.draggingEl) return;
+
+            // Determine insert position: before or after target based on pointer midpoint
+            const rect    = target.getBoundingClientRect();
+            const midX    = rect.left + rect.width  / 2;
+            const midY    = rect.top  + rect.height / 2;
+            const after   = e.clientY > midY || (Math.abs(e.clientY - midY) < 10 && e.clientX > midX);
+
+            grid.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+            target.classList.add('drag-over');
+
+            if (after) {
+                target.after(this.draggingEl);
+            } else {
+                target.before(this.draggingEl);
+            }
+        });
+
+        grid.addEventListener('dragleave', e => {
+            const target = e.target.closest('.device-card');
+            target?.classList.remove('drag-over');
+        });
+
+        grid.addEventListener('drop', e => {
+            e.preventDefault();
+            grid.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        });
+
+        // Prevent card-body interactive elements from triggering drags
+        grid.addEventListener('mousedown', e => {
+            if (!e.target.closest('.card-header')) {
+                // Temporarily disable dragging when clicking inside card body
+                const card = e.target.closest('.device-card');
+                if (card) {
+                    card.draggable = false;
+                    const re = () => { card.draggable = true; card.removeEventListener('mouseup', re); };
+                    card.addEventListener('mouseup', re);
+                    document.addEventListener('mouseup', re, { once: true });
+                }
+            }
+        });
+
+        this.restore();
+    },
+};
+
+document.addEventListener('DOMContentLoaded', () => CardOrder.init());
